@@ -1,0 +1,19 @@
+# node_modules
+**/node_modules
+
+# Environment
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Expo caches and build artifacts
+**/.expo/
+**/dist/
+**/web-build/
+
+# IDE and System files
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.log
