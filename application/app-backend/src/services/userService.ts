@@ -7,7 +7,9 @@ const createUser = async(
     const session = driver.session()
 
     const query = `
-        CREATE (n:User {name: $name, 
+        CREATE (n:User {
+            id: $id,
+            name: $name, 
             username: $username,
             email: $email,
             password: $userHashedPassword,
@@ -33,6 +35,36 @@ const createUser = async(
     }
 }
 
+const updateUserData = async (
+    id: string, name: string, username: string
+) => {
+    const session = driver.session()
+
+    const query = `
+        MATCH (u:User {id: $id})
+        SET u.name = $name,
+            u.username = $username
+        RETURN u
+    `
+
+    try {
+        const result = await session.run(query, {
+            id,
+            name,
+            username
+        })
+        
+        if (result.records.length === 0) {
+            throw new Error("Usuário não encontrado");
+        }
+        
+        return result.records[0].get('u').properties;
+    } finally {
+        await session.close()
+    }
+}
+
 export = {
-    createUser
+    createUser,
+    updateUserData
 }
