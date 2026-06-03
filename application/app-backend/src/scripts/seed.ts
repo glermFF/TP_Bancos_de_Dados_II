@@ -3,20 +3,20 @@ import dotenv = require('dotenv');
 
 dotenv.config();
 
-// Configura o Driver (Puxando as credenciais do seu arquivo .env)
+// Configura o Driver
 const driver = neo4j.driver(
   process.env.NEO4J_URI || 'bolt://localhost:7687',
   neo4j.auth.basic(process.env.NEO4J_USER || 'neo4j', process.env.NEO4J_PASSWORD || 'senha')
 );
 
-// Dados fictícios da sua cidade piloto para testar as regras de negócio
+// Dados fictícios da cidade teste
 const CIDADE_PILOTO = { nome: 'Piracicaba', estado: 'SP' };
 
 const ADEGAS_INICIAIS = [
   { nome: 'Adega Central', lat: -22.7251, lon: -47.6476, nota: 4.8, status: 'VERIFICADA' },
   { nome: 'Distribuidora do Zé', lat: -22.7312, lon: -47.6512, nota: 4.2, status: 'VERIFICADA' },
   { nome: 'Bar do Copo Cheio', lat: -22.7205, lon: -47.6410, nota: 3.9, status: 'VERIFICADA' },
-  { nome: 'Adega Nova (Em Teste)', lat: -22.7280, lon: -47.6440, nota: 5.0, status: 'EM_VALIDACAO' } // Testa a RN05/RN06
+  { nome: 'Adega Nova (Em Teste)', lat: -22.7280, lon: -47.6440}
 ];
 
 async function popularBanco() {
@@ -45,10 +45,10 @@ async function popularBanco() {
           ...adega
         }
       );
-      console.log(`📌 Adega "${adega.nome}" injetada e conectada a ${CIDADE_PILOTO.nome}.`);
+      console.log(`Adega "${adega.nome}" criada e conectada a ${CIDADE_PILOTO.nome}.`);
     }
 
-    console.log('Grafo populado com sucesso para os testes iniciais!');
+    console.log('Grafo populado com sucesso para testes');
   } catch (error) {
     console.error('Erro ao popular o banco de dados:', error);
   } finally {
