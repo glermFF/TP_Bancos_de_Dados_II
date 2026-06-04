@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "npx ts-node src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc",
     "seed": "ts-node src/scripts/seed.ts"
