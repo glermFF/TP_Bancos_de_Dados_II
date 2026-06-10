@@ -1,8 +1,36 @@
 # Arquitetura
 
-- Monolítico Modular se baseando no modelo MSC(Model Service Controller) para possível escalabilidade do projeto.
+## Padrão Arquitetural: Monólito Modular (MSC)
 
-- **Tecnologias:** Reactive Native(F), TypeScript(F/B), Node.js(B), Neo4j(DB), AuraDB(Cloud), FireBase(Auth).
+O backend do projeto foi desenhado sob o padrão de Monólito Modular, utilizando a arquitetura de camadas MSC (Model-Service-Controller). Esta divisão de responsabilidades garante acoplamento fraco e alta coesão, facilitando a escalabilidade, manutenção e o desenvolvimento de testes automatizados.
+
+### Camadas do Backend
+
+1. **Rotas (Routes):**
+   * Ponto de entrada das requisições HTTP da aplicação.
+   * Mapeia as URLs e métodos HTTP (GET, POST, etc.) direcionando-os aos respectivos Controllers.
+
+2. **Controladores (Controllers):**
+   * Responsáveis pela interface com o protocolo HTTP.
+   * Recebem os dados da requisição (`req.params`, `req.query`, `req.body`), realizam validações preliminares (formatos, tipos) e formatam a resposta que será enviada ao cliente em formato JSON.
+   * Não contêm regras de negócio; eles delegam o processamento pesado para a camada de Service.
+
+3. **Serviços (Services):**
+   * Estão aqui contidas as regras de negócio, algoritmos de cálculo de rotas, lógicas de quarentena de adegas, filtragem geográfica por raio e regras de reputação de usuários (RN01 a RN10).
+
+4. **Modelos (Models):**
+   * Responsáveis exclusivamente pela persistência e acesso aos dados.
+   * Isolam a complexidade do banco de dados, encapsulando as consultas escritas em Cypher.
+   * Mapeiam os resultados do grafo para estruturas de dados TypeScript consumidas pelos Services.
+
+### Benefícios da Arquitetura Escolhida
+
+* **Testabilidade Clara:** Como as regras de negócio estão concentradas na camada de Service, é possível criar testes unitários robustos e isolados.
+* **Isolamento da Persistência:** Qualquer alteração na modelagem do banco ou nas queries Cypher é contida na camada de Model, evitando que a complexidade de persistência contamine as regras de negócio ou as rotas.
+* **Escalabilidade (Decomposição para Microsserviços):** Embora o sistema seja inicialmente implantado como um monólito para facilitar o desenvolvimento, a separação modular por domínios (`adega`, `user`, `recomendacao`) permite que, se o cálculo de rotas e recomendações se tornar um gargalo de desempenho, esse módulo possa ser facilmente extraído para um microsserviço isolado sem a necessidade de reescrever outras partes do sistema.
+
+- **Tecnologias:** React Native (F), TypeScript (F/B), Node.js (B), Neo4j (DB), AuraDB (Cloud), Firebase (Auth).
+
 
 - **Estrutura do Projeto**:
 ```bash
