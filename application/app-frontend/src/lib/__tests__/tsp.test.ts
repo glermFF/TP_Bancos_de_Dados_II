@@ -1,44 +1,63 @@
-import { distance, pathLength, nearestNeighbor, twoOpt, solveRoute } from '../tsp';
-import type { GraphNode } from '../../data/types';
+import { nearestNeighbor, pathLength, solveRoute, twoOpt, type TspPoint } from '../tsp';
+import { haversineKm } from '../geo';
 
-// 4 corners of a square (in svg units). Optimal open path from the
-// top-left visits the perimeter without crossing.
-const square: GraphNode[] = [
-  { id: 'a', name: 'A', city: '', x: 0, y: 0 },
-  { id: 'b', name: 'B', city: '', x: 0, y: 100 },
-  { id: 'c', name: 'C', city: '', x: 100, y: 100 },
-  { id: 'd', name: 'D', city: '', x: 100, y: 0 },
-];
-const byId = Object.fromEntries(square.map((n) => [n.id, n]));
+// Real towns from the dataset (coordinates are town-level accurate).
+const P = {
+  salinas: { id: 'salinas', latitude: -16.1703, longitude: -42.2914 },
+  diamantina: { id: 'diamantina', latitude: -18.2419, longitude: -43.6027 },
+  novaUniao: { id: 'novaUniao', latitude: -19.6864, longitude: -43.5807 },
+  betim: { id: 'betim', latitude: -19.9668, longitude: -44.1983 },
+  tiradentes: { id: 'tiradentes', latitude: -21.1106, longitude: -44.1771 },
+  perdoes: { id: 'perdoes', latitude: -21.0911, longitude: -45.0911 },
+} satisfies Record<string, TspPoint>;
 
-describe('tsp', () => {
-  it('distance is symmetric and scaled by km/unit', () => {
-    expect(distance(byId.a, byId.b)).toBeCloseTo(distance(byId.b, byId.a));
-    expect(distance(byId.a, byId.b)).toBeGreaterThan(0);
+const ALL = Object.values(P);
+
+describe('haversineKm', () => {
+  it('matches the known Salinas → Diamantina distance (~265 km geodesic)', () => {
+    const d = haversineKm(P.salinas, P.diamantina);
+    expect(d).toBeGreaterThan(240);
+    expect(d).toBeLessThan(290);
   });
 
-  it('nearestNeighbor keeps the fixed start and visits every node once', () => {
-    const order = nearestNeighbor(square, byId.a);
-    expect(order[0].id).toBe('a');
-    expect(new Set(order.map((n) => n.id)).size).toBe(4);
+  it('is symmetric and zero on identity', () => {
+    expect(haversineKm(P.betim, P.perdoes)).toBeCloseTo(haversineKm(P.perdoes, P.betim), 10);
+    expect(haversineKm(P.betim, P.betim)).toBe(0);
+  });
+});
+
+describe('nearestNeighbor', () => {
+  it('starts at the start node and visits every node once', () => {
+    const order = nearestNeighbor(ALL, P.salinas);
+    expect(order[0].id).toBe('salinas');
+    expect(order).toHaveLength(ALL.length);
+    expect(new Set(order.map((n) => n.id)).size).toBe(ALL.length);
   });
 
-  it('2-opt never lengthens the nearest-neighbor path', () => {
-    const nn = nearestNeighbor(square, byId.a);
-    const opt = twoOpt(nn);
-    expect(pathLength(opt)).toBeLessThanOrEqual(pathLength(nn) + 1e-6);
+  it('picks the geographically nearest first hop (Salinas → Diamantina)', () => {
+    const order = nearestNeighbor(ALL, P.salinas);
+    expect(order[1].id).toBe('diamantina');
+  });
+});
+
+describe('twoOpt', () => {
+  it('never makes a path longer', () => {
+    const greedy = nearestNeighbor(ALL, P.betim);
+    expect(pathLength(twoOpt(greedy))).toBeLessThanOrEqual(pathLength(greedy) + 1e-9);
+  });
+});
+
+describe('solveRoute', () => {
+  it('keeps the fixed start and reports non-negative savings', () => {
+    const { order, totalKm, savedKm } = solveRoute(ALL, P.novaUniao, 'two-opt');
+    expect(order[0].id).toBe('novaUniao');
+    expect(totalKm).toBeGreaterThan(0);
+    expect(savedKm).toBeGreaterThanOrEqual(0);
   });
 
-  it('solveRoute on the square finds the crossing-free perimeter', () => {
-    const { order, total } = solveRoute(square, byId.a, '2opt');
-    expect(order[0].id).toBe('a');
-    // perimeter of an open path over 3 sides of a 100-unit square
-    const sideKm = distance(byId.a, byId.b);
-    expect(total).toBeCloseTo(sideKm * 3);
-  });
-
-  it('reports non-negative savings vs the naive order', () => {
-    const { saved } = solveRoute(square, byId.a, '2opt');
-    expect(saved).toBeGreaterThanOrEqual(0);
+  it('two-opt is at least as short as nearest-neighbour', () => {
+    const nn = solveRoute(ALL, P.salinas, 'nearest');
+    const opt = solveRoute(ALL, P.salinas, 'two-opt');
+    expect(opt.totalKm).toBeLessThanOrEqual(nn.totalKm + 1e-9);
   });
 });

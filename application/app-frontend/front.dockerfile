@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 8081
 
-CMD ["npx", "expo", "start"]
+CMD ["npx", "expo", "start", "--web", "--port", "8081"]

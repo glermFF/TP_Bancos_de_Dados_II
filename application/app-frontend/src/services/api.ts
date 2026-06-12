@@ -1,64 +1,121 @@
 import axios from 'axios';
-import type { Alambique } from '../data/types';
+import type {
+  Distillery,
+  GraphStats,
+  Paginated,
+  Review,
+  RouteAlgorithm,
+  RouteSolution,
+  User,
+} from '../data/types';
 
-/**
- * Axios client pointing at the Express backend, which talks to Neo4j.
- * Base URL comes from EXPO_PUBLIC_API_URL (set per-platform); falls back to
- * localhost for web dev. Screens use the typed helpers below and degrade to
- * mock data when the API is unreachable, so the UI works offline too.
- */
-const baseURL =
-  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+const baseURL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
 export const api = axios.create({ baseURL, timeout: 8000 });
 
+let authToken: string | null = null;
+
+/** Set (or clear) the JWT attached to subsequent requests. */
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+}
+
+api.interceptors.request.use((config) => {
+  if (authToken) config.headers.Authorization = `Bearer ${authToken}`;
+  return config;
+});
+
+/** Normalized API error message (server-provided when available). */
+export function apiErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const serverMessage = (error.response?.data as { error?: string } | undefined)?.error;
+    if (serverMessage) return serverMessage;
+    if (error.code === 'ECONNABORTED') return 'A API demorou demais para responder.';
+    if (!error.response) return 'Não foi possível falar com a API. O backend está rodando?';
+  }
+  return 'Algo deu errado. Tente de novo.';
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+export async function register(input: {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+}): Promise<AuthResponse> {
+  const { data } = await api.post<AuthResponse>('/auth/register', input);
+  return data;
+}
+
+export async function login(identifier: string, password: string): Promise<AuthResponse> {
+  const { data } = await api.post<AuthResponse>('/auth/login', { identifier, password });
+  return data;
+}
+
+export async function fetchProfile(): Promise<User> {
+  const { data } = await api.get<User>('/auth/me');
+  return data;
+}
+
+export async function fetchDistilleries(page = 1, pageSize = 100): Promise<Paginated<Distillery>> {
+  const { data } = await api.get<Paginated<Distillery>>('/distilleries', { params: { page, pageSize } });
+  return data;
+}
+
+export async function fetchAllDistilleries(): Promise<Distillery[]> {
+  return (await fetchDistilleries()).items;
+}
+
+export async function fetchLatestReviews(limit = 12): Promise<Review[]> {
+  const { data } = await api.get<Review[]>('/reviews', { params: { limit } });
+  return data;
+}
+
+export async function createReview(input: {
+  distilleryId: string;
+  title: string;
+  body: string;
+  rating: number;
+}): Promise<Review> {
+  const { data } = await api.post<Review>('/reviews', input);
+  return data;
+}
+
+/** Suggest a new distillery (auth required) — enters the graph as IN_VALIDATION. */
+export async function suggestDistillery(input: {
+  name: string;
+  category: string;
+  city: string;
+  latitude: number;
+  longitude: number;
+}): Promise<Distillery> {
+  const { data } = await api.post<Distillery>('/distilleries', input);
+  return data;
+}
+
+export async function solveRoute(
+  stopIds: string[],
+  startId: string,
+  algorithm: RouteAlgorithm,
+): Promise<RouteSolution> {
+  const { data } = await api.post<RouteSolution>('/routes/solve', { stopIds, startId, algorithm });
+  return data;
+}
+
+export async function fetchStats(): Promise<GraphStats> {
+  const { data } = await api.get<GraphStats>('/stats');
+  return data;
+}
+
 export async function checkHealth(): Promise<boolean> {
   try {
-    const { data } = await api.get('/health');
+    const { data } = await api.get<{ status: string }>('/health', { timeout: 3000 });
     return data?.status === 'online';
   } catch {
     return false;
   }
-}
-
-// Backend node (:Adega/:Alambique) shape — loose, server still evolving.
-interface AdegaDTO {
-  id?: string;
-  name?: string;
-  nome?: string;
-  type?: string;
-  category?: string;
-  nota?: number;
-  rate?: number;
-  city?: string;
-  cidade?: string;
-  region?: string;
-  regiao?: string;
-  reviews?: number;
-}
-
-function toAlambique(dto: AdegaDTO, i: number): Alambique {
-  return {
-    id: dto.id ?? `srv-${i}`,
-    idx: String(i + 1).padStart(2, '0'),
-    name: dto.nome ?? dto.name ?? 'Alambique sem nome',
-    label: ':Alambique',
-    props: [],
-    city: dto.cidade ?? dto.city ?? '—',
-    region: dto.regiao ?? dto.region ?? '—',
-    category: dto.category ?? dto.type ?? '—',
-    rate: dto.rate ?? dto.nota ?? 0,
-    reviews: dto.reviews ?? 0,
-  };
-}
-
-/** GET /adegas — list alambique nodes from the graph. */
-export async function fetchAlambiques(): Promise<Alambique[]> {
-  const { data } = await api.get<AdegaDTO[]>('/adegas');
-  return Array.isArray(data) ? data.map(toAlambique) : [];
-}
-
-/** POST /adegas/new — create a node. */
-export async function createAlambique(props: Partial<AdegaDTO>): Promise<void> {
-  await api.post('/adegas/new', props);
 }
