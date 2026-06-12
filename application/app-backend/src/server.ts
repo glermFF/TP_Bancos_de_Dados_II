@@ -1,20 +1,21 @@
-const app = require('./app');
-const { verificarConexaoNeo4j } = require('./config/neo4j');
-const dotenv = require('dotenv');
+import app from './app';
+import { env } from './config/env';
+import { closeDriver, verifyConnection } from './config/neo4j';
 
-dotenv.config();
-
-const PORT = process.env.PORT || 3000;
-
-const iniciarServidor = async () => {
-  console.log('Inicializando sistemas...');
-
-  await verificarConexaoNeo4j();
-
-  app.listen(PORT, () => {
-    console.log(`Servidor Express rodando na porta http://localhost:${PORT}`);
-    console.log(`Rota de teste disponível em: http://localhost:${PORT}/health`);
+async function start(): Promise<void> {
+  await verifyConnection();
+  const server = app.listen(env.port, env.host, () => {
+    console.log(`API listening on http://${env.host}:${env.port} (${env.isProduction ? 'production' : 'development'})`);
   });
-};
 
-iniciarServidor();
+  const shutdown = (): void => {
+    server.close(async () => {
+      await closeDriver();
+      process.exit(0);
+    });
+  };
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+}
+
+start();
