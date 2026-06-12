@@ -1,113 +1,90 @@
 # Arquitetura
 
-## Padrão Arquitetural: Monólito Modular (MSC)
+## Padrão: Monólito Modular (MSC)
 
-O backend do projeto foi desenhado sob o padrão de Monólito Modular, utilizando a arquitetura de camadas MSC (Model-Service-Controller). Esta divisão de responsabilidades garante acoplamento fraco e alta coesão, facilitando a escalabilidade, manutenção e o desenvolvimento de testes automatizados.
+O backend segue a divisão em camadas **Model–Service–Controller** dentro de uma
+única unidade implantável. As responsabilidades são separadas para manter o
+acoplamento baixo e permitir testar cada camada isoladamente.
 
-### Camadas do Backend
+### Camadas do backend
 
-1. **Rotas (Routes):**
-   * Ponto de entrada das requisições HTTP da aplicação.
-   * Mapeia as URLs e métodos HTTP (GET, POST, etc.) direcionando-os aos respectivos Controllers.
+1. **Rotas (Routes)** — pontos de entrada HTTP. Mapeiam URLs + verbos para os
+   controllers (`/auth`, `/distilleries`, `/reviews`, `/routes`, `/stats`).
+2. **Controladores (Controllers)** — só falam HTTP: leem o `req`, chamam um
+   service e moldam a resposta JSON. Sem regra de negócio.
+3. **Serviços (Services)** — o coração do app: validação, regras de negócio
+   (quarentena, filtro de confiança, reputação) e os algoritmos de otimização
+   de rota (vizinho mais próximo e 2-opt sobre uma matriz de distâncias).
+4. **Modelos (Models)** — só persistência. Toda query Cypher mora aqui; os
+   resultados são mapeados para objetos TypeScript antes de sair da camada.
 
-2. **Controladores (Controllers):**
-   * Responsáveis pela interface com o protocolo HTTP.
-   * Recebem os dados da requisição (`req.params`, `req.query`, `req.body`), realizam validações preliminares (formatos, tipos) e formatam a resposta que será enviada ao cliente em formato JSON.
-   * Não contêm regras de negócio; eles delegam o processamento pesado para a camada de Service.
+Peças transversais: `middlewares/` (autenticação JWT, tratador central de
+erros), `config/` (env + driver do Neo4j), `lib/` (heurísticas puras de TSP),
+`scripts/seed.ts` (carrega o dataset de Minas Gerais).
 
-3. **Serviços (Services):**
-   * Estão aqui contidas as regras de negócio, algoritmos de cálculo de rotas, lógicas de quarentena de adegas, filtragem geográfica por raio e regras de reputação de usuários (RN01 a RN10).
+### Por que esse formato
 
-4. **Modelos (Models):**
-   * Responsáveis exclusivamente pela persistência e acesso aos dados.
-   * Isolam a complexidade do banco de dados, encapsulando as consultas escritas em Cypher.
-   * Mapeiam os resultados do grafo para estruturas de dados TypeScript consumidas pelos Services.
+* **Testabilidade** — regras de negócio concentradas nos services; o solver de
+  TSP é um módulo puro com testes unitários.
+* **Isolamento da persistência** — mudanças de esquema ou Cypher ficam contidas
+  nos models.
+* **Escalabilidade** — o módulo `routes/solve` pode ser extraído para um
+  serviço próprio sem mexer no resto.
 
-### Benefícios da Arquitetura Escolhida
+### Cálculo de rota, de ponta a ponta
 
-* **Testabilidade Clara:** Como as regras de negócio estão concentradas na camada de Service, é possível criar testes unitários robustos e isolados.
-* **Isolamento da Persistência:** Qualquer alteração na modelagem do banco ou nas queries Cypher é contida na camada de Model, evitando que a complexidade de persistência contamine as regras de negócio ou as rotas.
-* **Escalabilidade (Decomposição para Microsserviços):** Embora o sistema seja inicialmente implantado como um monólito para facilitar o desenvolvimento, a separação modular por domínios (`adega`, `user`, `recomendacao`) permite que, se o cálculo de rotas e recomendações se tornar um gargalo de desempenho, esse módulo possa ser facilmente extraído para um microsserviço isolado sem a necessidade de reescrever outras partes do sistema.
+1. O frontend envia `POST /routes/solve` com os ids das paradas + partida.
+2. O model pede ao Neo4j a matriz de `point.distance()` entre esses nós
+   (o banco faz a matemática espacial).
+3. O service corrige os km geodésicos por um fator rodoviário de 1,27, roda o
+   vizinho mais próximo (opcionalmente refinado pelo 2-opt) e devolve as
+   paradas ordenadas, trechos, totais e tempo estimado de direção.
+4. O cliente web então pede ao OSRM (roteamento OpenStreetMap) a geometria
+   viária real daquela ordem e desenha no mapa Leaflet; se o OSRM estiver fora
+   do ar, cai para linhas retas tracejadas.
 
-- **Tecnologias:** React Native (F), TypeScript (F/B), Node.js (B), Neo4j (DB), AuraDB (Cloud), Firebase (Auth).
+## Stack
 
+| Camada    | Tecnologia                                              |
+|-----------|---------------------------------------------------------|
+| Frontend  | Expo / React Native Web, TypeScript, Leaflet, axios     |
+| Backend   | Node.js, Express, TypeScript, JWT (jsonwebtoken), bcryptjs |
+| Banco     | Neo4j 5 (grafo de propriedades + pontos espaciais)      |
+| Roteamento| Heurísticas de TSP no service · OSRM para geometria viária |
+| Infra     | Docker **ou** Podman + compose, Makefile                |
 
-- **Estrutura do Projeto**:
-```bash
-app-backend/
-├── src/
-│   ├── config/   # Configurações globais (Banco de dados, Variáveis de ambiente)
-│   │   ├── neo4j.ts   # Inicialização e exportação do Driver do Neo4j
-│   │   └── database/   # Banco de dados Neo4J
-│   │       └── dockerfile   # Imagem personalizada para inicializar neo4J
-│   │
-│   ├── controllers/  # Recebe HTTP req, chama o Service e cospe JSON
-│   │   ├── adegaController.ts  # Busca, detalhes, filtros de adegas
-│   │   └── userController.ts   # Cadastro, login, reputação do usuário
-│   │
-│   ├── services/   # O coração do app (Regras de Negócio e Algoritmos)
-│   │   ├── adegaService.ts # Lógica de proximidade, quarentena, etc.
-│   │   └── recomendacaoService.ts # Cálculo do peso das arestas e rota no grafo
-│   │
-│   ├── models/     # Mapeamento de dados e consultas Cypher puras
-│   │   ├── adegaModel.ts # Queries de inserção e busca de nós do tipo (:Adega)
-│   │   └── userModel.ts  # Queries para nós do tipo (:User)
-│   │
-│   ├── routes/     # Definição dos Endpoints que o Insomnia vai chamar
-│   │   ├── index.ts      # Agrupador central de rotas
-│   │   └── adegaRoutes.ts # Rotas tipo GET /adegas/proximas, POST /adegas
-│   │
-│   ├── middlewares/ # Filtros intermediários (Autenticação, Tratamento de Erros)
-│   │   └── errorMiddleware.ts  # Captura erros dos Services
-│   │
-│   ├── scripts/    # Scripts utilitários de automação e carga de dados
-│   │   └── seed.ts   # O script de carga inicial que você pediu!
-│   │
-│   ├── app.ts      # Configuração do Express (cors, json, middlewares)
-│   └── server.ts     # Ponto de entrada (Dá o app.listen na porta 3000)
-│
-├── .env            # Senhas e portas (NUNCA suba para o GitHub)
-├── package.json    # Dependências do Node.js
-└── tsconfig.json   # Configurações do compilador TypeScript
+## Estrutura do projeto
+
+```
+application/
+  app-backend/
+    src/
+      config/        # env + driver Neo4j (sessões gerenciadas, retries)
+      controllers/   # authController, distilleryController, reviewController, routeController
+      services/      # authService, distilleryService, reviewService, routeService
+      models/        # userModel, distilleryModel, reviewModel (todo Cypher mora aqui)
+      middlewares/   # authenticate (JWT), errorHandler (ApiError)
+      routes/        # routers express por domínio
+      lib/           # tsp.ts — vizinho mais próximo + 2-opt puros sobre matriz
+      scripts/       # seed.ts — alambiques reais de MG, cidades, malha ROAD, usuários demo
+      types/         # interfaces DTO compartilhadas
+      app.ts         # montagem do express (cors, json, rotas, erros)
+      server.ts      # ponto de entrada
+  app-frontend/
+    src/
+      components/    # Topbar, Footer, Button, Field, AuthCard, RouteMap(.web)
+      screens/       # Home, Distilleries, RoutePlanner, Journal, About, SignIn, SignUp, SuggestPlace
+      context/       # AuthContext (sessão JWT persistida)
+      data/          # tipos de domínio + dataset offline de fallback
+      lib/           # tsp + geo (haversine) + format — com testes unitários
+      services/      # api.ts (axios), osrm.ts (geometria viária), storage.ts
+      styles/        # webChrome — fontes, grão de papel, skin do Leaflet
+      theme/         # paleta + tipografia
+  docker-compose.yml # neo4j + backend + seed (one-shot) + frontend
+doc/                 # esta documentação
+Makefile             # atalhos de dev/teste (rode `make help`)
 ```
 
-```bash
-app-frontend/
-├── src/
-│   ├── assets/      # Imagens, ícones, logos e fontes customizadas
-│   │
-│   ├── components/          # Componentes menores e reutilizáveis
-│   │   ├── Botao.tsx        # Botão padrão do app
-│   │   ├── CardAdega.tsx    # O "balão" ou card que sobe ao clicar numa adega
-│   │   └── InputBusca.tsx   # Barra de pesquisa de adegas
-│   │
-│   ├── screens/         # As telas completas do aplicativo
-│   │   ├── HomeMapa/    # Tela principal com o mapa interativo
-│   │   │   └── index.tsx
-│   │   ├── Onboarding/  # Tela de seleção de preferências (Copo sujo, adegas...)
-│   │   │   └── index.tsx
-│   │   └── CadastroAdega/      # Formulário de cadastro de novo ponto
-│   │       └── index.tsx
-│   │
-│   ├── navigation/     # Configuração de rotas e abas (React Navigation)
-│   │   ├── index.tsx   # Direciona: se logado vai para App, se não vai para Auth
-│   │   ├── AppNavigator.tsx    # Fluxo do Mapa e Detalhes
-│   │   └── AuthNavigator.tsx   # Fluxo de Login / Cadastro
-│   │
-│   ├── services/      # Conexões com o mundo exterior
-│   │   └── api.ts    # Configuração do Axios apontando para a API Express
-│   │
-│   ├── context/                # Estados globais da aplicação (Context API)
-│   │   ├── AuthContext.tsx     # Guarda dados do usuário logado e reputação
-│   │   └── FiltroContext.tsx   # Guarda os filtros ativos (exibir apenas verificado)
-│   │
-│   ├── hooks/           # Custom Hooks para limpar a lógica das telas
-│   │   └── useLocation.ts  # Centraliza a captura do GPS do celular (Método 1)
-│   │
-│   └── utils/     # Funções utilitárias e constantes
-│       └── formatadores.ts # Formatar distância de metros para km (1000m -> 1km)
-│
-├── App.tsx     # Componente raiz que envelopa os Contexts e Navigation
-├── index.js    # Ponto de entrada nativo do React Native
-├── package.json
-└── tsconfig.json
+> Convenção: o código-fonte (identificadores, rótulos do grafo, endpoints) é
+> escrito em inglês; todo texto visível ao usuário e a documentação ficam em
+> português do Brasil.

@@ -1,61 +1,85 @@
-# Testes
+# Testes & Execução Local
 
-### Imagem docker
+Tudo passa pelo `Makefile` na raiz — rode `make help` para ver a lista.
 
-Executar banco de dados localmente
-
-```bash
-# Emcaminhar para o seguinte diretório
-cd /application/app-backend/src/config/database
-
-docker-compose up -d 
-```
-
-### Dependências npm
-
-Instalar as dependências necessaŕias e testar a aplicação
-
-**Backend**
+## Demo completa em containers (um comando)
 
 ```bash
-cd /application/app-backend
-npm install 
+cd application && cp .env.example .env   # preencha NEO4J_PASSWORD e JWT_SECRET
+make up        # Neo4j + API + seed (one-shot) + web, via docker/podman compose
 ```
 
-**Frontend**
+Depois abra:
+
+| URL | O quê |
+|---|---|
+| http://localhost:8081 | o app web |
+| http://localhost:3000/health | verificação da API |
+| http://localhost:7474 | Neo4j Browser (usuário `neo4j`, senha do seu `.env`) |
+
+Login demo: **demo@cachaceiro.app** com a senha definida em
+`SEED_USER_PASSWORD` (vazia = aleatória, impressa no log do seed).
+
+## Dev local (hot reload)
 
 ```bash
-cd /application/app-frontend
-npm install 
+make install   # npm install do front + back
+make db        # Neo4j em container (portas 7474/7687)
+make seed      # carrega o dataset de Minas Gerais (força recarga limpa)
+make back      # API na :3000 (ts-node-dev, reinicia sozinho)
+make front     # Expo web na :8081
 ```
 
-### Teste Backend
+O backend lê `application/app-backend/.env` (criado a partir do
+`.env.example`): `PORT`, `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`,
+`JWT_SECRET`, `JWT_EXPIRES_IN`.
 
-**!! Importante !!**
-Crie o arquivo .env em */applications/app-backend* com as seguintes informações para o build da imagem funcionar:
+O frontend aponta por padrão para `http://localhost:3000`; sobrescreva com
+`EXPO_PUBLIC_API_URL=... make front`. Sem API no ar ele degrada para o dataset
+offline embutido (o banner mostra “DADOS DE EXEMPLO”).
 
-- PORT
-- NEO4J_URI
-- NEO4J_USER
-- NEO4J_PASSWORD
+## Portões de qualidade
 
 ```bash
-cd /application/app-backend
-npm run backend # Inicia backend na porta 3000 conectando com o Neo4j 
+make typecheck   # tsc --noEmit no frontend e no backend
+make test        # Jest — testes unitários de TSP/geo (frontend)
 ```
 
-### Test Frontend (Desktop)
+## Teste de fumaça da API (curl)
 
 ```bash
-cd /application/app-frontend
-npm run web # Inicia protótipo para testes do front na porta padrão 
+curl http://localhost:3000/health
+curl http://localhost:3000/stats
+curl http://localhost:3000/distilleries
+
+# autenticação
+curl -X POST http://localhost:3000/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Maria","username":"maria","email":"maria@exemplo.com","password":"segredo1"}'
+
+TOKEN=$(curl -s -X POST http://localhost:3000/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"identifier":"demo@cachaceiro.app","password":"<senha-do-seed>"}' | jq -r .token)
+
+curl http://localhost:3000/auth/me -H "Authorization: Bearer $TOKEN"
+
+# cálculo de rota (ids vêm do GET /distilleries)
+curl -X POST http://localhost:3000/routes/solve \
+  -H 'Content-Type: application/json' \
+  -d '{"stopIds":["<id1>","<id2>","<id3>"],"startId":"<id1>","algorithm":"two-opt"}'
+
+# indicar alambique (autenticado)
+curl -X POST http://localhost:3000/distilleries \
+  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"name":"Alambique do Teste","category":"Branca","city":"Ouro Preto","latitude":-20.39,"longitude":-43.50}'
 ```
 
-### Test Frontend (Mobile)
-
-Para facilitar testes de usabilidade foi escolhido o Expo Go. Instale no celular e escaneie o QR Code gerado assim que executado o seguinte comando:
+## Mobile (Expo Go)
 
 ```bash
-cd /application/app-frontend
-npx expo start # Inicia protótipo mobile com Expo Go
+cd application/app-frontend
+npx expo start    # escaneie o QR code com o Expo Go
 ```
+
+O mapa interativo Leaflet é exclusivo da web; no nativo o planejador mostra um
+texto de fallback, mas o cálculo de rota continua funcionando contra a API.
