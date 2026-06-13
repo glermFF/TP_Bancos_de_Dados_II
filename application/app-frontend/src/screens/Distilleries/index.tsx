@@ -14,12 +14,13 @@ import type { Distillery } from '../../data/types';
 import { fetchAllDistilleries } from '../../services/api';
 import { useFetch } from '../../hooks/useFetch';
 import { stars } from '../../lib/format';
+import { copy } from '../../copy/strings';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type RatingFilter = 'any' | '4.0' | '4.5';
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 5;
 
 function countBy(list: Distillery[], key: (d: Distillery) => string): [string, number][] {
   const counts = new Map<string, number>();
@@ -27,12 +28,7 @@ function countBy(list: Distillery[], key: (d: Distillery) => string): [string, n
   return [...counts.entries()].sort((a, b) => b[1] - a[1]);
 }
 
-function FilterGroup({
-  title,
-  options,
-  active,
-  onPick,
-}: {
+function FilterGroup({ title, options, active, onPick }: {
   title: string;
   options: { key: string; label: string; count: number }[];
   active: string | null;
@@ -72,11 +68,11 @@ function Row({ item, index, onAdd }: { item: Distillery; index: number; onAdd: (
           <View style={styles.rowMain}>
             <View style={styles.rowNameLine}>
               <Text style={[styles.rowName, hovered && { color: colors.red }]}>{item.name}</Text>
-              {item.status === 'IN_VALIDATION' ? <Tag variant="route">em validação</Tag> : null}
+              {item.status === 'IN_VALIDATION' ? <Tag variant="route">{copy.distilleries.inValidation}</Tag> : null}
             </View>
             <Text style={styles.rowCity}>
               {item.city.toUpperCase()} · {item.region.toUpperCase()}
-              {item.founded ? ` · DESDE ${item.founded}` : ''}
+              {item.founded ? copy.distilleries.since(item.founded) : ''}
             </Text>
             {item.signature ? <Text style={styles.rowSig}>“{item.signature}”</Text> : null}
             <View style={styles.rowTags}>
@@ -88,12 +84,12 @@ function Row({ item, index, onAdd }: { item: Distillery; index: number; onAdd: (
             <Text style={styles.rowRate}>{item.rating.toFixed(1)}</Text>
             <Text style={styles.rowStars}>{stars(item.rating)}</Text>
             <Text style={styles.rowReviews}>
-              {item.reviewCount} {item.reviewCount === 1 ? 'NOTA DE CAMPO' : 'NOTAS DE CAMPO'}
+              {item.reviewCount} {item.reviewCount === 1 ? copy.distilleries.reviewsOne : copy.distilleries.reviewsMany}
             </Text>
             <Hoverable onPress={onAdd}>
               {(h: boolean) => (
                 <Text style={[styles.rowAdd, h && { color: colors.cream, backgroundColor: colors.red, borderColor: colors.red }]}>
-                  ADICIONAR À ROTA →
+                  {copy.distilleries.addToRoute}
                 </Text>
               )}
             </Hoverable>
@@ -110,13 +106,13 @@ function Pager({ page, totalPages, onPage }: { page: number; totalPages: number;
     <View style={styles.pager}>
       <Hoverable onPress={page > 1 ? () => onPage(page - 1) : undefined}>
         {(h: boolean) => (
-          <Text style={[styles.pagerBtn, page <= 1 && styles.pagerOff, h && page > 1 && { color: colors.red }]}>← ANTERIOR</Text>
+          <Text style={[styles.pagerBtn, page <= 1 && styles.pagerOff, h && page > 1 && { color: colors.red }]}>{copy.distilleries.prev}</Text>
         )}
       </Hoverable>
-      <Text style={styles.pagerInfo}>PÁGINA {page} DE {totalPages}</Text>
+      <Text style={styles.pagerInfo}>{copy.distilleries.pageOf(page, totalPages)}</Text>
       <Hoverable onPress={page < totalPages ? () => onPage(page + 1) : undefined}>
         {(h: boolean) => (
-          <Text style={[styles.pagerBtn, page >= totalPages && styles.pagerOff, h && page < totalPages && { color: colors.red }]}>PRÓXIMA →</Text>
+          <Text style={[styles.pagerBtn, page >= totalPages && styles.pagerOff, h && page < totalPages && { color: colors.red }]}>{copy.distilleries.next}</Text>
         )}
       </Hoverable>
     </View>
@@ -127,7 +123,6 @@ export default function DistilleriesScreen() {
   const nav = useNavigation<Nav>();
   const { width } = useWindowDimensions();
   const stacked = width <= 1080;
-
   const { data: all, live } = useFetch(fetchAllDistilleries, FALLBACK_DISTILLERIES);
   const [query, setQuery] = useState('');
   const [region, setRegion] = useState<string | null>(null);
@@ -156,72 +151,60 @@ export default function DistilleriesScreen() {
   return (
     <Screen active="Distilleries">
       <PageHead
-        crumbs={[{ label: 'Guia' }, { label: 'Alambiques', current: true }]}
-        title={['Cada alambique ', { em: 'no mapa.' }]}
-        lede={`O catálogo por trás do grafo — ${all.length} alambiques em cidades reais de Minas Gerais, cada um pronto para entrar na sua rota. ${live ? '' : '(Dados de exemplo offline.)'}`}
+        crumbs={[{ label: copy.crumbGuia }, { label: 'Alambiques', current: true }]}
+        title={copy.distilleries.title}
+        lede={copy.distilleries.lede(all.length, live)}
       />
-
       <View style={styles.suggestRow}>
-        <Text style={styles.suggestText}>Conhece um alambique que não está aqui?</Text>
-        <Button label="Indicar alambique" ghost onPress={() => nav.navigate('SuggestPlace')} />
+        <Text style={styles.suggestText}>{copy.distilleries.suggestText}</Text>
+        <Button label={copy.distilleries.suggestCta} ghost onPress={() => nav.navigate('SuggestPlace')} />
       </View>
-
       <View style={[styles.layout, stacked && styles.colLayout]}>
         <View style={[styles.rail, !stacked && styles.railWide]}>
           <FilterGroup
-            title="Região"
+            title={copy.distilleries.filterRegion}
             options={countBy(all, (d) => d.region).map(([key, count]) => ({ key, label: key, count }))}
             active={region}
             onPick={setRegion}
           />
           <FilterGroup
-            title="Categoria"
+            title={copy.distilleries.filterCategory}
             options={countBy(all, (d) => d.category).map(([key, count]) => ({ key, label: key, count }))}
             active={category}
             onPick={setCategory}
           />
           <FilterGroup
-            title="Nota"
+            title={copy.distilleries.filterRating}
             options={[
-              { key: '4.5', label: '★ 4,5 ou mais', count: all.filter((d) => d.rating >= 4.5).length },
-              { key: '4.0', label: '★ 4,0 ou mais', count: all.filter((d) => d.rating >= 4).length },
+              { key: '4.5', label: copy.distilleries.rating45, count: all.filter((d) => d.rating >= 4.5).length },
+              { key: '4.0', label: copy.distilleries.rating40, count: all.filter((d) => d.rating >= 4).length },
             ]}
             active={rating === 'any' ? null : rating}
             onPick={(key) => setRating((key as RatingFilter) ?? 'any')}
           />
           <FilterGroup
-            title="Confiança (RN06)"
-            options={[{
-              key: 'pending',
-              label: 'Incluir “em validação”',
-              count: all.filter((d) => d.status === 'IN_VALIDATION').length,
-            }]}
+            title={copy.distilleries.filterTrust}
+            options={[{ key: 'pending', label: copy.distilleries.includePending, count: all.filter((d) => d.status === 'IN_VALIDATION').length }]}
             active={includePending ? 'pending' : null}
             onPick={(key) => setIncludePending(key === 'pending')}
           />
         </View>
-
         <View style={{ flex: 1, width: '100%' }}>
           <Field
-            label={`Busca · ${filtered.length} de ${all.length} exibidos`}
-            placeholder="Nome, cidade ou região…"
+            label={copy.distilleries.searchLabel(filtered.length, all.length)}
+            placeholder={copy.distilleries.searchPlaceholder}
             value={query}
             onChangeText={setQuery}
             autoCapitalize="none"
           />
           {pageItems.map((d, i) => (
-            <Row
-              key={d.id}
-              item={d}
-              index={(page - 1) * PAGE_SIZE + i}
-              onAdd={() => nav.navigate('RoutePlanner', { preselect: d.id })}
-            />
+            <Row key={d.id} item={d} index={(page - 1) * PAGE_SIZE + i} onAdd={() => nav.navigate('RoutePlanner', { preselect: d.id })} />
           ))}
           <Pager page={page} totalPages={totalPages} onPage={setPage} />
           {!filtered.length ? (
             <View style={styles.empty}>
               <Text style={styles.emptyIc}>∅</Text>
-              <Text style={styles.emptyText}>Nada combina com esses filtros. Afrouxe um deles e tente de novo.</Text>
+              <Text style={styles.emptyText}>{copy.distilleries.emptyText}</Text>
             </View>
           ) : null}
         </View>
@@ -231,16 +214,12 @@ export default function DistilleriesScreen() {
 }
 
 const styles = StyleSheet.create({
-  suggestRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    flexWrap: 'wrap', columnGap: 16, rowGap: 12, paddingTop: 26, paddingBottom: 4,
-  },
+  suggestRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', columnGap: 16, rowGap: 12, paddingTop: 26, paddingBottom: 4 },
   suggestText: { fontFamily: fonts.serif, fontStyle: 'italic', fontSize: 17, color: colors.inkSoft },
   layout: { flexDirection: 'row', columnGap: 44, rowGap: 32, paddingTop: 40, alignItems: 'flex-start' },
   colLayout: { flexDirection: 'column' },
   rail: { width: '100%' },
   railWide: { width: 250, flexShrink: 0 },
-
   grp: { borderBottomWidth: 1, borderBottomColor: colors.rule, paddingBottom: 18, marginBottom: 18 },
   grpHead: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.inkSoft, marginBottom: 12 },
   opt: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 },
@@ -251,12 +230,7 @@ const styles = StyleSheet.create({
   optLabel: { fontFamily: fonts.serif, fontSize: 14.5, color: colors.inkSoft },
   optLabelOn: { color: colors.ink },
   optCount: { fontFamily: fonts.mono, fontSize: 10, color: colors.inkSoft },
-
-  row: {
-    flexDirection: 'row', alignItems: 'flex-start', columnGap: 20,
-    borderWidth: 1, borderColor: colors.rule, borderRadius: 8,
-    backgroundColor: colors.paper, padding: 22, marginBottom: 14,
-  },
+  row: { flexDirection: 'row', alignItems: 'flex-start', columnGap: 20, borderWidth: 1, borderColor: colors.rule, borderRadius: 8, backgroundColor: colors.paper, padding: 22, marginBottom: 14 },
   rowNarrow: { flexWrap: 'wrap', rowGap: 14 },
   rowHover: { borderColor: colors.ink },
   rowIdx: { fontFamily: fonts.display, fontStyle: 'italic', fontSize: 22, color: colors.copper, width: 36 },
@@ -270,21 +244,11 @@ const styles = StyleSheet.create({
   rowRate: { fontFamily: fonts.display, fontStyle: 'italic', fontSize: 30, color: colors.ink },
   rowStars: { fontSize: 11, color: colors.copper, letterSpacing: 2 },
   rowReviews: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1.2, color: colors.inkSoft },
-  rowAdd: {
-    fontFamily: fonts.mono, fontSize: 9.5, letterSpacing: 1.6, color: colors.ink,
-    borderWidth: 1, borderColor: colors.ink, borderRadius: 999,
-    paddingVertical: 7, paddingHorizontal: 12, marginTop: 8, overflow: 'hidden',
-  },
-
-  pager: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderWidth: 1, borderColor: colors.rule, borderRadius: 8,
-    backgroundColor: colors.paper, paddingVertical: 14, paddingHorizontal: 20, marginTop: 6,
-  },
+  rowAdd: { fontFamily: fonts.mono, fontSize: 9.5, letterSpacing: 1.6, color: colors.ink, borderWidth: 1, borderColor: colors.ink, borderRadius: 999, paddingVertical: 7, paddingHorizontal: 12, marginTop: 8, overflow: 'hidden' },
+  pager: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: colors.rule, borderRadius: 8, backgroundColor: colors.paper, paddingVertical: 14, paddingHorizontal: 20, marginTop: 6 },
   pagerBtn: { fontFamily: fonts.mono, fontSize: 10.5, letterSpacing: 1.6, color: colors.ink },
   pagerOff: { opacity: 0.3 },
   pagerInfo: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.6, color: colors.inkSoft },
-
   empty: { alignItems: 'center', paddingVertical: 50 },
   emptyIc: { fontFamily: fonts.display, fontStyle: 'italic', fontSize: 40, color: colors.copper, marginBottom: 8 },
   emptyText: { fontFamily: fonts.serif, fontSize: 15, color: colors.inkSoft },

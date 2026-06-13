@@ -7,7 +7,6 @@ async function start(): Promise<void> {
   const server = app.listen(env.port, env.host, () => {
     console.log(`API listening on http://${env.host}:${env.port} (${env.isProduction ? 'production' : 'development'})`);
   });
-
   const shutdown = (): void => {
     server.close(async () => {
       await closeDriver();

@@ -51,9 +51,9 @@ export interface RouteLeg {
 
 export interface RouteSolution {
   algorithm: RouteAlgorithm;
-  stops: Distillery[];      // visit order, starting at the requested start
+  stops: Distillery[];
   legs: RouteLeg[];
   totalKm: number;
-  savedKm: number;          // vs visiting in the order the stops were sent
-  estimatedMinutes: number; // driving + tasting stops
+  savedKm: number;
+  estimatedMinutes: number;
 }

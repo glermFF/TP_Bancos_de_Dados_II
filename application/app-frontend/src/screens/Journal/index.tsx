@@ -16,6 +16,7 @@ import * as apiService from '../../services/api';
 import { useFetch } from '../../hooks/useFetch';
 import { useAuth } from '../../context/AuthContext';
 import { formatDate, stars } from '../../lib/format';
+import { copy } from '../../copy/strings';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -59,7 +60,7 @@ function WriteNote({ distilleries, onCreated }: { distilleries: Distillery[]; on
   async function submit() {
     if (sending) return;
     setError(null);
-    if (!distilleryId) { setError('Escolha o alambique desta nota.'); return; }
+    if (!distilleryId) { setError(copy.journal.pickError); return; }
     setSending(true);
     try {
       onCreated(await apiService.createReview({ distilleryId, title, body, rating }));
@@ -75,9 +76,8 @@ function WriteNote({ distilleries, onCreated }: { distilleries: Distillery[]; on
 
   return (
     <View style={styles.write}>
-      <Text style={styles.writeHead}>NOVA NOTA DE CAMPO</Text>
-
-      <Text style={styles.pickLabel}>ALAMBIQUE</Text>
+      <Text style={styles.writeHead}>{copy.journal.writeHead}</Text>
+      <Text style={styles.pickLabel}>{copy.journal.pickAlambique}</Text>
       <View style={styles.pickWrap}>
         {distilleries.map((d) => (
           <Chip
@@ -88,17 +88,9 @@ function WriteNote({ distilleries, onCreated }: { distilleries: Distillery[]; on
           />
         ))}
       </View>
-
-      <Field label="Título" placeholder="Uma linha que resuma a visita" value={title} onChangeText={setTitle} />
-      <Field
-        label="A nota"
-        placeholder="O que você provou? Quem serviu? O que o próximo viajante precisa saber?"
-        value={body}
-        onChangeText={setBody}
-        multiline
-      />
-
-      <Text style={styles.pickLabel}>NOTA</Text>
+      <Field label={copy.journal.titleLabel} placeholder={copy.journal.titlePlaceholder} value={title} onChangeText={setTitle} />
+      <Field label={copy.journal.bodyLabel} placeholder={copy.journal.bodyPlaceholder} value={body} onChangeText={setBody} multiline />
+      <Text style={styles.pickLabel}>{copy.journal.ratingLabel}</Text>
       <View style={styles.starRow}>
         {[1, 2, 3, 4, 5].map((n) => (
           <Hoverable key={n} onPress={() => setRating(n)}>
@@ -107,10 +99,9 @@ function WriteNote({ distilleries, onCreated }: { distilleries: Distillery[]; on
         ))}
         <Text style={styles.starVal}>{rating.toFixed(1)}</Text>
       </View>
-
       {error ? <Text style={styles.formError}>{error}</Text> : null}
-      {done ? <Text style={styles.formDone}>NOTA REGISTRADA — OBRIGADO, VIAJANTE.</Text> : null}
-      <Button label={sending ? 'Registrando…' : 'Registrar nota'} full disabled={sending} onPress={submit} />
+      {done ? <Text style={styles.formDone}>{copy.journal.done}</Text> : null}
+      <Button label={sending ? copy.journal.submitting : copy.journal.submit} full disabled={sending} onPress={submit} />
     </View>
   );
 }
@@ -120,7 +111,6 @@ export default function JournalScreen() {
   const { user } = useAuth();
   const { width } = useWindowDimensions();
   const stacked = width <= 1080;
-
   const reviews = useFetch(() => apiService.fetchLatestReviews(20), FALLBACK_REVIEWS);
   const { data: distilleries } = useFetch(apiService.fetchAllDistilleries, FALLBACK_DISTILLERIES);
 
@@ -135,11 +125,10 @@ export default function JournalScreen() {
   return (
     <Screen active="Journal">
       <PageHead
-        crumbs={[{ label: 'Guia' }, { label: 'Diário', current: true }]}
-        title={['Notas de ', { em: 'estrada.' }]}
-        lede={`Notas de campo registradas pelos viajantes depois de cada visita — a memória viva do grafo. ${reviews.live ? '' : '(Dados de exemplo offline.)'}`}
+        crumbs={[{ label: copy.crumbGuia }, { label: 'Diário', current: true }]}
+        title={copy.journal.title}
+        lede={copy.journal.lede(reviews.live)}
       />
-
       <View style={[styles.layout, stacked && styles.colLayout]}>
         <View style={{ flex: 1.5, width: '100%' }}>
           <View style={[styles.cols, stacked && styles.colLayout]}>
@@ -150,29 +139,25 @@ export default function JournalScreen() {
             ))}
           </View>
         </View>
-
         <View style={[{ width: '100%' }, !stacked && { width: 380, flexShrink: 0 }]}>
           {user ? (
             reviews.live ? (
-              <WriteNote
-                distilleries={distilleries}
-                onCreated={(r) => reviews.setData((previous) => [r, ...previous])}
-              />
+              <WriteNote distilleries={distilleries} onCreated={(r) => reviews.setData((previous) => [r, ...previous])} />
             ) : (
               <GateCard
                 icon="⚲"
-                title="A API está fora do ar."
-                text="Suba o backend (`make back`) para registrar novas notas no grafo."
+                title={copy.journal.gateApiTitle}
+                text={copy.journal.gateApiText}
               />
             )
           ) : (
             <GateCard
               icon="✎"
-              title="Carregue seu próprio caderno."
-              text="Entre na conta para registrar notas de campo, dar nota aos alambiques e construir uma reputação em que outros viajantes confiam."
+              title={copy.journal.gateAuthTitle}
+              text={copy.journal.gateAuthText}
             >
-              <Button label="Entrar" full onPress={() => nav.navigate('SignIn')} />
-              <Button label="Criar conta" ghost full onPress={() => nav.navigate('SignUp')} />
+              <Button label={copy.gate.enter} full onPress={() => nav.navigate('SignIn')} />
+              <Button label={copy.gate.create} ghost full onPress={() => nav.navigate('SignUp')} />
             </GateCard>
           )}
         </View>
@@ -185,7 +170,6 @@ const styles = StyleSheet.create({
   layout: { flexDirection: 'row', columnGap: 44, rowGap: 32, paddingTop: 40, alignItems: 'flex-start' },
   colLayout: { flexDirection: 'column' },
   cols: { flexDirection: 'row', columnGap: 18, rowGap: 18, alignItems: 'flex-start' },
-
   card: { borderWidth: 1, borderColor: colors.rule, borderRadius: 8, backgroundColor: colors.paper, padding: 24 },
   cardHead: { flexDirection: 'row', alignItems: 'center', columnGap: 12, marginBottom: 14 },
   avatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
@@ -197,7 +181,6 @@ const styles = StyleSheet.create({
   place: { fontFamily: fonts.mono, fontSize: 8.5, letterSpacing: 1.4, color: colors.redDeep, marginBottom: 10 },
   cardTitle: { fontFamily: fonts.display, fontStyle: 'italic', fontSize: 21, color: colors.ink, lineHeight: 25, marginBottom: 8 },
   cardBody: { fontFamily: fonts.serif, fontSize: 14.5, lineHeight: 22, color: colors.inkSoft },
-
   write: { borderWidth: 1, borderColor: colors.rule, borderRadius: 8, backgroundColor: colors.paper, padding: 24 },
   writeHead: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.inkSoft, marginBottom: 18 },
   pickLabel: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.inkSoft, marginBottom: 8 },

@@ -1,10 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ApiError } from './errorHandler';
 
-/** In-memory fixed-window rate limiter (per client IP). */
 export function rateLimit(maxRequests: number, windowMs: number) {
   const hits = new Map<string, { count: number; resetAt: number }>();
-
   return (req: Request, _res: Response, next: NextFunction): void => {
     const now = Date.now();
     const key = req.ip ?? 'unknown';

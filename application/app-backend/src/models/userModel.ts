@@ -27,12 +27,7 @@ export function toPublic(user: UserRecord): PublicUser {
   return publicUser;
 }
 
-export async function createUser(input: {
-  name: string;
-  username: string;
-  email: string;
-  passwordHash: string;
-}): Promise<UserRecord> {
+export async function createUser(input: { name: string; username: string; email: string; passwordHash: string }): Promise<UserRecord> {
   const rows = await run<RawUser>(
     `CREATE (u:User {
        id: $id,

@@ -26,7 +26,6 @@ export async function suggest(
   const city = input.city?.trim() ?? '';
   const latitude = Number(input.latitude);
   const longitude = Number(input.longitude);
-
   if (name.length < 3) throw new ApiError(400, 'O nome do alambique precisa ter pelo menos 3 caracteres');
   if (city.length < 2) throw new ApiError(400, 'Informe a cidade');
   if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
@@ -35,7 +34,6 @@ export async function suggest(
   if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
     throw new ApiError(400, 'Longitude inválida');
   }
-
   return distilleryModel.suggestDistillery({
     name,
     city,

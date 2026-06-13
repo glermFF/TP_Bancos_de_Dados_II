@@ -1,7 +1,3 @@
-// Domain types — mirror the Neo4j property-graph model served by the API.
-// (:Distillery)-[:LOCATED_IN]->(:City), (:City)-[:ROAD {km}]-(:City)
-// (:User)-[:WROTE]->(:Review)-[:ABOUT]->(:Distillery)
-
 export type DistilleryStatus = 'VERIFIED' | 'IN_VALIDATION' | 'BLOCKED';
 
 export interface Distillery {
@@ -49,11 +45,7 @@ export interface Paginated<T> {
 
 export type RouteAlgorithm = 'nearest' | 'two-opt';
 
-export interface RouteLeg {
-  fromId: string;
-  toId: string;
-  km: number;
-}
+export interface RouteLeg { fromId: string; toId: string; km: number; }
 
 export interface RouteSolution {
   algorithm: RouteAlgorithm;
@@ -64,14 +56,6 @@ export interface RouteSolution {
   estimatedMinutes: number;
 }
 
-export interface GraphStats {
-  distilleries: number;
-  cities: number;
-  reviews: number;
-  regions: number;
-}
+export interface GraphStats { distilleries: number; cities: number; reviews: number; regions: number; }
 
-export interface LatLng {
-  latitude: number;
-  longitude: number;
-}
+export interface LatLng { latitude: number; longitude: number; }

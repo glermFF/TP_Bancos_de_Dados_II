@@ -2,8 +2,8 @@ import React from 'react';
 import { NavigationContainer, type LinkingOptions, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { colors } from '../theme';
+import { copy } from '../copy/strings';
 import type { RootStackParamList } from './types';
-
 import HomeScreen from '../screens/Home';
 import DistilleriesScreen from '../screens/Distilleries';
 import RoutePlannerScreen from '../screens/RoutePlanner';
@@ -31,25 +31,20 @@ const linking: LinkingOptions<RootStackParamList> = {
   },
 };
 
-const navTheme = {
-  ...DefaultTheme,
-  colors: { ...DefaultTheme.colors, background: colors.cream },
-};
+const navTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: colors.cream } };
 
 export function Navigation() {
   return (
     <NavigationContainer linking={linking} theme={navTheme}>
-      <Stack.Navigator
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.cream } }}
-      >
-        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Cachaceiro Viajante — Roteiros de cachaça em Minas Gerais' }} />
-        <Stack.Screen name="Distilleries" component={DistilleriesScreen} options={{ title: 'Alambiques — Cachaceiro Viajante' }} />
-        <Stack.Screen name="RoutePlanner" component={RoutePlannerScreen} options={{ title: 'Monte sua rota — Cachaceiro Viajante' }} />
-        <Stack.Screen name="Journal" component={JournalScreen} options={{ title: 'Diário de bordo — Cachaceiro Viajante' }} />
-        <Stack.Screen name="About" component={AboutScreen} options={{ title: 'Sobre — Cachaceiro Viajante' }} />
-        <Stack.Screen name="SignIn" component={SignInScreen} options={{ title: 'Entrar — Cachaceiro Viajante' }} />
-        <Stack.Screen name="SignUp" component={SignUpScreen} options={{ title: 'Criar conta — Cachaceiro Viajante' }} />
-        <Stack.Screen name="SuggestPlace" component={SuggestPlaceScreen} options={{ title: 'Indicar alambique — Cachaceiro Viajante' }} />
+      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.cream } }}>
+        <Stack.Screen name="Home" component={HomeScreen} options={{ title: copy.navTitles.Home }} />
+        <Stack.Screen name="Distilleries" component={DistilleriesScreen} options={{ title: copy.navTitles.Distilleries }} />
+        <Stack.Screen name="RoutePlanner" component={RoutePlannerScreen} options={{ title: copy.navTitles.RoutePlanner }} />
+        <Stack.Screen name="Journal" component={JournalScreen} options={{ title: copy.navTitles.Journal }} />
+        <Stack.Screen name="About" component={AboutScreen} options={{ title: copy.navTitles.About }} />
+        <Stack.Screen name="SignIn" component={SignInScreen} options={{ title: copy.navTitles.SignIn }} />
+        <Stack.Screen name="SignUp" component={SignUpScreen} options={{ title: copy.navTitles.SignUp }} />
+        <Stack.Screen name="SuggestPlace" component={SuggestPlaceScreen} options={{ title: copy.navTitles.SuggestPlace }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

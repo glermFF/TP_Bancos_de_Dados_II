@@ -2,14 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, fonts } from '../theme';
 
-type Props = {
-  icon: string;
-  title: string;
-  text: string;
-  children?: React.ReactNode;
-};
+type Props = { icon: string; title: string; text: string; children?: React.ReactNode };
 
-/** Paper card that blocks a feature and explains what unlocks it. */
 export function GateCard({ icon, title, text, children }: Props) {
   return (
     <View style={styles.gate}>

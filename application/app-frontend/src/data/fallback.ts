@@ -1,6 +1,5 @@
 import type { Distillery, GraphStats, Review } from './types';
 
-// Mirror of the backend seed (real MG stops) so the UI works with no API.
 export const FALLBACK_DISTILLERIES: Distillery[] = [
   { id: 'havana', name: 'Cachaça Havana — Anísio Santiago', city: 'Salinas', region: 'Norte de Minas', category: 'Envelhecida', status: 'VERIFIED', rating: 5.0, reviewCount: 1, founded: 1943, signature: 'Anísio Santiago 12 anos', tags: ['barris de bálsamo', 'lotes limitados', 'garrafa cult'], latitude: -16.1547, longitude: -42.3010 },
   { id: 'seleta', name: 'Cachaça Seleta', city: 'Salinas', region: 'Norte de Minas', category: 'Envelhecida', status: 'VERIFIED', rating: 5.0, reviewCount: 1, founded: 1953, signature: 'Seleta Ouro', tags: ['barris de bálsamo', 'visita guiada', 'loja própria'], latitude: -16.1779, longitude: -42.2856 },
@@ -37,12 +36,6 @@ export const FALLBACK_REVIEWS: Review[] = [
   { id: 'r6', title: 'História que se bebe em gole', body: "Fazenda do século XVIII com a roda d'água ainda girando. A Premium é honesta, limpa de cobre, com doçura suave de cana. Pareceu viagem no tempo.", rating: 4.5, createdAt: '2026-05-25T12:00:00Z', author: { id: 'u3', name: 'Tião do Carmo', username: 'tiao' }, distillery: { id: 'cxc', name: 'Cachaça Coronel Xavier Chaves', city: 'Coronel Xavier Chaves' } },
 ];
 
-export const FALLBACK_STATS: GraphStats = {
-  distilleries: FALLBACK_DISTILLERIES.length,
-  cities: 20,
-  reviews: FALLBACK_REVIEWS.length,
-  regions: 12,
-};
+export const FALLBACK_STATS: GraphStats = { distilleries: FALLBACK_DISTILLERIES.length, cities: 20, reviews: FALLBACK_REVIEWS.length, regions: 12 };
 
-/** Category options offered when a traveler suggests a new place. */
 export const CATEGORIES = ['Branca', 'Envelhecida', 'Premium', 'Orgânica', 'Histórica'];

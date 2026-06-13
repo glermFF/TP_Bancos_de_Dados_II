@@ -8,7 +8,6 @@ const USER_KEY = 'cv.user';
 
 interface AuthContextValue {
   user: User | null;
-  /** True while the persisted session is being restored. */
   loading: boolean;
   signIn: (identifier: string, password: string) => Promise<void>;
   signUp: (input: { name: string; username: string; email: string; password: string }) => Promise<void>;
@@ -24,28 +23,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const token = storage.getItem(TOKEN_KEY);
     const cached = storage.getItem(USER_KEY);
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    if (!token) { setLoading(false); return; }
     apiService.setAuthToken(token);
     if (cached) {
-      try {
-        setUser(JSON.parse(cached) as User);
-      } catch {
-        storage.removeItem(USER_KEY);
-      }
+      try { setUser(JSON.parse(cached) as User); }
+      catch { storage.removeItem(USER_KEY); }
     }
-    // Refresh the profile in the background; drop the session if the token died.
-    apiService
-      .fetchProfile()
-      .then((profile) => {
-        setUser(profile);
-        storage.setItem(USER_KEY, JSON.stringify(profile));
-      })
-      .catch((error) => {
-        if (apiService.apiErrorMessage(error).includes('token')) clearSession();
-      })
+    apiService.fetchProfile()
+      .then((profile) => { setUser(profile); storage.setItem(USER_KEY, JSON.stringify(profile)); })
+      .catch((error) => { if (apiService.apiErrorMessage(error).includes('token')) clearSession(); })
       .finally(() => setLoading(false));
 
     function clearSession() {
@@ -66,12 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return {
       user,
       loading,
-      async signIn(identifier, password) {
-        persist(await apiService.login(identifier, password));
-      },
-      async signUp(input) {
-        persist(await apiService.register(input));
-      },
+      async signIn(identifier, password) { persist(await apiService.login(identifier, password)); },
+      async signUp(input) { persist(await apiService.register(input)); },
       signOut() {
         apiService.setAuthToken(null);
         storage.removeItem(TOKEN_KEY);

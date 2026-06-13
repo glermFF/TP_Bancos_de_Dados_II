@@ -1,7 +1,6 @@
 import neo4j, { type Driver, type Session } from 'neo4j-driver';
 import { env } from './env';
 
-// disableLosslessIntegers: plain JS numbers instead of neo4j Integer objects.
 export const driver: Driver = neo4j.driver(
   env.neo4jUri,
   neo4j.auth.basic(env.neo4jUser, env.neo4jPassword),
@@ -12,7 +11,6 @@ export function getSession(): Session {
   return driver.session();
 }
 
-/** Run a single Cypher query in a managed session. */
 export async function run<T = Record<string, unknown>>(
   cypher: string,
   params: Record<string, unknown> = {},

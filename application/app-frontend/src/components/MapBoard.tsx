@@ -11,7 +11,6 @@ type Props = {
   children: React.ReactNode;
 };
 
-/** Paper plate frame around the map: corner annotations + ruled box. */
 export function MapBoard({ headLeft, headRight, footLeft, footRight, footRightAccent, children }: Props) {
   return (
     <View style={styles.board}>
@@ -32,9 +31,5 @@ const styles = StyleSheet.create({
   board: { backgroundColor: colors.paper, borderWidth: 1, borderColor: colors.rule, borderRadius: 8, padding: 18, width: '100%' },
   row: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', rowGap: 4, marginBottom: 12 },
   corner: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 2, color: colors.inkSoft },
-  mapBox: {
-    width: '100%', aspectRatio: 6 / 5, maxHeight: 640,
-    borderWidth: 1, borderColor: colors.rule, borderRadius: 6,
-    overflow: 'hidden', backgroundColor: colors.paper,
-  },
+  mapBox: { width: '100%', aspectRatio: 16 / 9, minHeight: 460, maxHeight: 720, borderWidth: 1, borderColor: colors.rule, borderRadius: 6, overflow: 'hidden', backgroundColor: colors.paper },
 });

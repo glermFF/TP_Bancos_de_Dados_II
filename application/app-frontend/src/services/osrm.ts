@@ -1,21 +1,15 @@
 import type { LatLng } from '../data/types';
 
 export interface RoadGeometry {
-  /** [lat, lng] pairs ready for a Leaflet polyline. */
   latlngs: [number, number][];
   km: number;
   minutes: number;
 }
 
-/**
- * Real road geometry from the public OSRM demo server (OpenStreetMap data).
- * Returns null on any failure so callers can fall back to straight lines.
- */
 export async function fetchRoadRoute(points: LatLng[]): Promise<RoadGeometry | null> {
   if (points.length < 2) return null;
   const coords = points.map((p) => `${p.longitude},${p.latitude}`).join(';');
   const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
-
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 9000);
   try {

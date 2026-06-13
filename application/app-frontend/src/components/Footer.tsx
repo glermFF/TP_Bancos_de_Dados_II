@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, fonts } from '../theme';
 import { Hoverable } from './Hoverable';
+import { copy } from '../copy/strings';
 import type { RootStackParamList, RouteName } from '../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -34,23 +35,18 @@ export function Footer() {
   const { width } = useWindowDimensions();
   const cols = width <= 640 ? 1 : width <= 1080 ? 2 : 4;
   const basis = `${100 / cols - 2}%` as const;
-
   return (
     <View style={styles.footer}>
       <View style={styles.grid}>
         <View style={[styles.brandBlock, { flexBasis: cols >= 4 ? '32%' : basis }]}>
           <Text style={styles.brandWord}>Cachaceiro{'\n'}Viajante.</Text>
-          <Text style={styles.brandText}>
-            O guia da cachaça mineira que monta o melhor roteiro entre os alambiques
-            que você escolhe — menos estrada, mais prosa e bons goles pelo caminho.
-          </Text>
+          <Text style={styles.brandText}>{copy.footer.brandText}</Text>
           <View style={styles.flag}>
             <View style={styles.flagR} /><View style={styles.flagW} />
             <View style={styles.flagR} /><View style={styles.flagW} />
-            <Text style={styles.flagText}>MINAS GERAIS · BRASIL</Text>
+            <Text style={styles.flagText}>{copy.footer.flag}</Text>
           </View>
         </View>
-
         {COLUMNS.map((col) => (
           <View key={col.head} style={{ flexBasis: basis, flexGrow: 1 }}>
             <Text style={styles.h5}>{col.head.toUpperCase()}</Text>
@@ -64,11 +60,10 @@ export function Footer() {
           </View>
         ))}
       </View>
-
       <View style={styles.colophon}>
-        <Text style={styles.colText}>© 2026 CACHACEIRO VIAJANTE · UM ALMANAQUE DE ESTRADA EM NEO4J</Text>
-        <Text style={styles.colText}>ALAMBIQUES · ESTRADAS · MINAS GERAIS</Text>
-        <Text style={styles.colText}>BEBA COM MODERAÇÃO · 18+</Text>
+        {copy.footer.colophon.map((line) => (
+          <Text key={line} style={styles.colText}>{line}</Text>
+        ))}
       </View>
     </View>
   );
@@ -87,9 +82,6 @@ const styles = StyleSheet.create({
   h5: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.inkSoft, marginBottom: 16 },
   li: { fontFamily: fonts.serif, fontSize: 15, color: colors.ink, paddingVertical: 6 },
   liHover: { color: colors.red },
-  colophon: {
-    marginTop: 40, paddingVertical: 18, borderTopWidth: 1, borderTopColor: colors.rule,
-    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: 16, rowGap: 8,
-  },
+  colophon: { marginTop: 40, paddingVertical: 18, borderTopWidth: 1, borderTopColor: colors.rule, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', columnGap: 16, rowGap: 8 },
   colText: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.inkSoft },
 });

@@ -1,6 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
 
-/** Error with an HTTP status; services throw these for expected failures. */
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);

@@ -25,8 +25,6 @@ export const env = {
   neo4jPassword: required('NEO4J_PASSWORD'),
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
-  /** Comma-separated origins allowed by CORS; empty = allow all (dev). */
   allowedOrigins: (process.env.ALLOWED_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
-  /** Directory with the exported web build; empty = API only (dev). */
   webDist: process.env.WEB_DIST ?? '',
 } as const;

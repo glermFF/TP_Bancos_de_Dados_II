@@ -9,6 +9,7 @@ import { Button } from '../../components/Button';
 import { Hoverable } from '../../components/Hoverable';
 import { useAuth } from '../../context/AuthContext';
 import { apiErrorMessage } from '../../services/api';
+import { copy } from '../../copy/strings';
 import type { RootStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -38,33 +39,18 @@ export default function SignInScreen() {
   return (
     <Screen active="SignIn">
       <AuthCard
-        docLabel="DOC. Nº 01 — IDENTIFICAÇÃO DO VIAJANTE"
-        title={<>Bem-vindo de volta, viajante.</>}
-        subtitle="Abra seu caderno: suas rotas, notas de campo e reputação moram no grafo."
+        docLabel={copy.signIn.docLabel}
+        title={<>{copy.signIn.title}</>}
+        subtitle={copy.signIn.subtitle}
       >
         {error ? <Text style={authStyles.error}>{error}</Text> : null}
-        <Field
-          label="E-mail ou usuário"
-          placeholder="maria@exemplo.com"
-          value={identifier}
-          onChangeText={setIdentifier}
-          autoCapitalize="none"
-          autoComplete="email"
-          onSubmitEditing={submit}
-        />
-        <Field
-          label="Senha"
-          placeholder="••••••••"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          onSubmitEditing={submit}
-        />
-        <Button label={busy ? 'Entrando…' : 'Entrar'} full disabled={busy} onPress={submit} />
+        <Field label={copy.signIn.identifier} placeholder={copy.signIn.identifierPlaceholder} value={identifier} onChangeText={setIdentifier} autoCapitalize="none" autoComplete="email" onSubmitEditing={submit} />
+        <Field label={copy.signIn.password} placeholder={copy.signIn.passwordPlaceholder} value={password} onChangeText={setPassword} secureTextEntry onSubmitEditing={submit} />
+        <Button label={busy ? copy.signIn.submitting : copy.signIn.submit} full disabled={busy} onPress={submit} />
         <View style={authStyles.switchRow}>
-          <Text style={authStyles.switchText}>Primeira viagem?</Text>
+          <Text style={authStyles.switchText}>{copy.signIn.switchText}</Text>
           <Hoverable onPress={() => nav.navigate('SignUp')}>
-            <Text style={authStyles.switchLink}>Crie sua carteirinha de viajante →</Text>
+            <Text style={authStyles.switchLink}>{copy.signIn.switchLink}</Text>
           </Hoverable>
         </View>
       </AuthCard>

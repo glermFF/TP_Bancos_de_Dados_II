@@ -9,7 +9,6 @@ interface RawDistillery {
   region?: string;
 }
 
-/** Neo4j spatial Point — for WGS-84, x = longitude, y = latitude. */
 interface RawPoint {
   x: number;
   y: number;
@@ -70,13 +69,7 @@ export async function findById(id: string): Promise<Distillery | null> {
   return all[0] ?? null;
 }
 
-/**
- * Straight-line distances (meters) between every pair of the given nodes,
- * computed by Neo4j's spatial `point.distance` on the stored locations.
- */
-export async function pairwiseDistances(
-  ids: string[],
-): Promise<{ aId: string; bId: string; meters: number }[]> {
+export async function pairwiseDistances(ids: string[]): Promise<{ aId: string; bId: string; meters: number }[]> {
   return run(
     `MATCH (a:Distillery), (b:Distillery)
      WHERE a.id IN $ids AND b.id IN $ids AND a.id < b.id
@@ -85,15 +78,7 @@ export async function pairwiseDistances(
   );
 }
 
-/** User-suggested distillery: enters the graph as IN_VALIDATION (quarantine). */
-export async function suggestDistillery(input: {
-  name: string;
-  category: string;
-  latitude: number;
-  longitude: number;
-  city: string;
-  userId: string;
-}): Promise<Distillery> {
+export async function suggestDistillery(input: { name: string; category: string; latitude: number; longitude: number; city: string; userId: string }): Promise<Distillery> {
   const rows = await run<RawDistillery>(
     `MATCH (u:User {id: $userId})
      MERGE (c:City {name: $city})

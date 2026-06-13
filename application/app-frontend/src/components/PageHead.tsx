@@ -3,20 +3,11 @@ import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { colors, fonts } from '../theme';
 
 type Crumb = { label: string; current?: boolean };
-
-/**
- * Page title block reused on every subpage: breadcrumb, oversized italic
- * display headline (with red emphasis), lede paragraph.
- * `title` parts: plain strings render in ink, `{ em: '...' }` render red.
- */
 type TitlePart = string | { em: string };
 
-export function PageHead({
-  crumbs, title, lede,
-}: { crumbs: Crumb[]; title: TitlePart[]; lede?: React.ReactNode }) {
+export function PageHead({ crumbs, title, lede }: { crumbs: Crumb[]; title: TitlePart[]; lede?: React.ReactNode }) {
   const { width } = useWindowDimensions();
   const h1Size = Math.max(56, Math.min(120, width * 0.08));
-
   return (
     <View style={styles.head}>
       <View style={styles.crumb}>

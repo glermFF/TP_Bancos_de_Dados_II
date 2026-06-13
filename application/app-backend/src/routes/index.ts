@@ -6,7 +6,6 @@ import routeRoutes from './routeRoutes';
 import * as distilleryController from '../controllers/distilleryController';
 
 const router = Router();
-
 router.use('/auth', authRoutes);
 router.use('/distilleries', distilleryRoutes);
 router.use('/reviews', reviewRoutes);

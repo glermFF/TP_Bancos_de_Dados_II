@@ -1,4 +1,4 @@
-import { nearestNeighbor, pathLength, solveRoute, twoOpt, type TspPoint } from '../tsp';
+import { cycleLength, nearestNeighbor, solveRoute, twoOpt, type TspPoint } from '../tsp';
 import { haversineKm } from '../geo';
 
 // Real towns from the dataset (coordinates are town-level accurate).
@@ -41,9 +41,14 @@ describe('nearestNeighbor', () => {
 });
 
 describe('twoOpt', () => {
-  it('never makes a path longer', () => {
+  it('never makes the round-trip longer', () => {
     const greedy = nearestNeighbor(ALL, P.betim);
-    expect(pathLength(twoOpt(greedy))).toBeLessThanOrEqual(pathLength(greedy) + 1e-9);
+    expect(cycleLength(twoOpt(greedy))).toBeLessThanOrEqual(cycleLength(greedy) + 1e-9);
+  });
+
+  it('returns to the start node (closed loop fixed at index 0)', () => {
+    const order = twoOpt(nearestNeighbor(ALL, P.betim));
+    expect(order[0].id).toBe('betim');
   });
 });
 

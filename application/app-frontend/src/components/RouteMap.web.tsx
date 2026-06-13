@@ -1,31 +1,32 @@
-import React, { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import { colors } from '../theme';
-import type { MapStop, RouteMapProps } from './RouteMap.types';
+import React, { useEffect, useRef } from "react";
+import L from "leaflet";
+import { colors } from "../theme";
+import { copy } from "../copy/strings";
+import type { MapStop, RouteMapProps } from "./RouteMap.types";
 
-// Sepia grading that blends the tiles into the paper theme: webChrome .cv-map
-const TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+const TILE_URL =
+  "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 const TILE_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
 const MINAS_CENTER: [number, number] = [-19.2, -44.3];
 
 function pinHtml(stop: MapStop): string {
-  const label = stop.order != null ? String(stop.order) : stop.selected ? '●' : '+';
+  const label =
+    stop.order != null ? String(stop.order) : stop.selected ? "●" : "+";
   const tip = `${stop.name} · ${stop.city}`;
   return `${label}<span class="cv-tip">${tip}</span>`;
 }
 
 function pinClass(stop: MapStop, hasSolution: boolean): string {
-  const parts = ['cv-pin'];
-  if (stop.isStart && stop.order != null) parts.push('cv-pin--start');
-  else if (stop.order != null) parts.push('cv-pin--ordered');
-  else if (stop.selected) parts.push('cv-pin--selected');
-  if (hasSolution && !stop.selected) parts.push('cv-pin--muted');
-  return parts.join(' ');
+  const parts = ["cv-pin"];
+  if (stop.isStart && stop.order != null) parts.push("cv-pin--start");
+  else if (stop.order != null) parts.push("cv-pin--ordered");
+  else if (stop.selected) parts.push("cv-pin--selected");
+  if (hasSolution && !stop.selected) parts.push("cv-pin--muted");
+  return parts.join(" ");
 }
 
-/** Real Leaflet map of Minas Gerais, skinned as an aged road-almanac plate. */
 export default function RouteMap({
   stops,
   routeLatLngs,
@@ -54,15 +55,18 @@ export default function RouteMap({
       scrollWheelZoom: true,
       attributionControl: true,
     });
-    L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+    L.tileLayer(TILE_URL, {
+      attribution: TILE_ATTRIBUTION,
+      subdomains: "abcd",
+      maxZoom: 19,
+    }).addTo(map);
     markersRef.current = L.layerGroup().addTo(map);
     routeRef.current = L.layerGroup().addTo(map);
     draftRef.current = L.layerGroup().addTo(map);
-    map.on('click', (event: L.LeafletMouseEvent) => {
+    map.on("click", (event: L.LeafletMouseEvent) => {
       clickRef.current?.(event.latlng.lat, event.latlng.lng);
     });
     mapRef.current = map;
-
     const observer = new ResizeObserver(() => map.invalidateSize());
     observer.observe(hostRef.current);
     return () => {
@@ -74,7 +78,6 @@ export default function RouteMap({
 
   const hasSolution = routeLatLngs != null || straightPath != null;
 
-  // Markers
   useEffect(() => {
     const layer = markersRef.current;
     const map = mapRef.current;
@@ -90,20 +93,20 @@ export default function RouteMap({
       const marker = L.marker([stop.latitude, stop.longitude], {
         icon,
         keyboard: false,
-        title: '',
+        title: "",
       });
-      marker.on('click', () => toggleRef.current?.(stop.id));
+      marker.on("click", () => toggleRef.current?.(stop.id));
       layer.addLayer(marker);
     }
     if (!didInitialFit.current && stops.length) {
       didInitialFit.current = true;
-      map.fitBounds(L.latLngBounds(stops.map((s) => [s.latitude, s.longitude])), {
-        padding: [42, 42],
-      });
+      map.fitBounds(
+        L.latLngBounds(stops.map((s) => [s.latitude, s.longitude])),
+        { padding: [42, 42] },
+      );
     }
   }, [stops, hasSolution]);
 
-  // Route polyline (road geometry when available, dashed straight legs otherwise)
   useEffect(() => {
     const layer = routeRef.current;
     const map = mapRef.current;
@@ -116,33 +119,35 @@ export default function RouteMap({
       color: colors.red,
       weight: 9,
       opacity: 0.16,
-      lineJoin: 'round',
-      lineCap: 'round',
+      lineJoin: "round",
+      lineCap: "round",
     }).addTo(layer);
     L.polyline(path, {
       color: colors.red,
       weight: 3,
       opacity: 0.95,
-      lineJoin: 'round',
-      lineCap: 'round',
-      ...(isRoad ? {} : { dashArray: '7 9' }),
+      lineJoin: "round",
+      lineCap: "round",
+      ...(isRoad ? {} : { dashArray: "7 9" }),
     }).addTo(layer);
     map.fitBounds(L.latLngBounds(path), { padding: [46, 46] });
   }, [routeLatLngs, straightPath]);
 
-  // Draft pin for a place being suggested
   useEffect(() => {
     const layer = draftRef.current;
     if (!layer) return;
     layer.clearLayers();
     if (!draftPin) return;
     const icon = L.divIcon({
-      className: 'cv-pin cv-pin--draft',
-      html: `✛<span class="cv-tip">novo alambique aqui</span>`,
+      className: "cv-pin cv-pin--draft",
+      html: `✛<span class="cv-tip">${copy.map.draftPinTip}</span>`,
       iconSize: [26, 26],
       iconAnchor: [13, 13],
     });
-    L.marker([draftPin.latitude, draftPin.longitude], { icon, keyboard: false }).addTo(layer);
+    L.marker([draftPin.latitude, draftPin.longitude], {
+      icon,
+      keyboard: false,
+    }).addTo(layer);
   }, [draftPin]);
 
   return <div ref={hostRef} className="cv-map" />;

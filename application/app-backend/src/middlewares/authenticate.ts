@@ -4,7 +4,7 @@ import { env } from '../config/env';
 import { ApiError } from './errorHandler';
 
 export interface AuthPayload {
-  sub: string; // user id
+  sub: string;
   username: string;
 }
 
@@ -16,7 +16,6 @@ export function signToken(payload: AuthPayload): string {
   return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn } as jwt.SignOptions);
 }
 
-/** Requires a valid `Authorization: Bearer <token>` header. */
 export function authenticate(req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {

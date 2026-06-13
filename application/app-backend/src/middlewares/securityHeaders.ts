@@ -1,9 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { env } from '../config/env';
 
-// CSP allowlist covers everything the web build loads: Google Fonts,
-// Leaflet CSS (unpkg), CARTO tiles, OSRM routing and the inline styles
-// react-native-web generates.
 const CSP = [
   "default-src 'self'",
   "script-src 'self'",

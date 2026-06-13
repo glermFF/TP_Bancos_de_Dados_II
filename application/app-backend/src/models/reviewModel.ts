@@ -56,17 +56,7 @@ export async function listByDistillery(distilleryId: string): Promise<Review[]> 
   return rows.map(mapReview);
 }
 
-/**
- * Creates the review and refreshes the distillery's denormalized
- * rating/reviewCount in the same transaction.
- */
-export async function createReview(input: {
-  userId: string;
-  distilleryId: string;
-  title: string;
-  body: string;
-  rating: number;
-}): Promise<Review> {
+export async function createReview(input: { userId: string; distilleryId: string; title: string; body: string; rating: number }): Promise<Review> {
   const rows = await run<RawReview>(
     `MATCH (u:User {id: $userId}), (d:Distillery {id: $distilleryId})
      CREATE (u)-[:WROTE]->(r:Review {

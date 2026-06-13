@@ -1,18 +1,8 @@
-/**
- * Loads the Minas Gerais dataset. Coordinates are real (town-level);
- * `landmark: true` marks representative stops, not commercial brands.
- * DESTRUCTIVE with --force: wipes the database first. Dev/demo only.
- */
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { closeDriver, run, verifyConnection } from '../config/neo4j';
 
-interface CitySeed {
-  name: string;
-  region: string;
-  lat: number;
-  lon: number;
-}
+interface CitySeed { name: string; region: string; lat: number; lon: number; }
 
 const CITIES: CitySeed[] = [
   { name: 'Salinas', region: 'Norte de Minas', lat: -16.1703, lon: -42.2914 },
@@ -78,11 +68,7 @@ const DISTILLERIES: DistillerySeed[] = [
   { name: 'Alambique do Cerrado', city: 'Uberlândia', category: 'Branca', rating: 4.2, founded: null, signature: 'Prata do Cerrado', tags: ['ipês amarelos', 'cana de sequeiro'], lat: -18.9188, lon: -48.2768, landmark: true },
 ];
 
-interface UserSeed {
-  name: string;
-  username: string;
-  email: string;
-}
+interface UserSeed { name: string; username: string; email: string; }
 
 const USERS: UserSeed[] = [
   { name: 'Viajante Demo', username: 'demo', email: 'demo@cachaceiro.app' },
@@ -90,18 +76,9 @@ const USERS: UserSeed[] = [
   { name: 'Tião do Carmo', username: 'tiao', email: 'tiao@cachaceiro.app' },
 ];
 
-// SEED_USER_PASSWORD sets the demo travelers' password; otherwise a random
-// one is generated and printed once below.
 const seedPassword = process.env.SEED_USER_PASSWORD || randomUUID().slice(0, 12);
 
-interface ReviewSeed {
-  username: string;
-  distillery: string;
-  title: string;
-  body: string;
-  rating: number;
-  daysAgo: number;
-}
+interface ReviewSeed { username: string; distillery: string; title: string; body: string; rating: number; daysAgo: number; }
 
 const REVIEWS: ReviewSeed[] = [
   { username: 'demo', distillery: 'Cachaça Havana — Anísio Santiago', title: 'A garrafa que toda estante sonha', body: 'Doze anos de bálsamo e dá pra sentir: damasco seco, cedro e um final que dura a prosa inteira. O número do lote é escrito à mão. Só ela já vale a viagem até Salinas.', rating: 5, daysAgo: 3 },
@@ -116,16 +93,13 @@ const REVIEWS: ReviewSeed[] = [
 
 async function seed(force: boolean): Promise<void> {
   if (!force) {
-    const existing = await run<{ total: number }>(
-      'MATCH (d:Distillery) RETURN count(d) AS total',
-    );
+    const existing = await run<{ total: number }>('MATCH (d:Distillery) RETURN count(d) AS total');
     if ((existing[0]?.total ?? 0) > 0) {
       console.log('Graph already seeded — skipping (use `npm run seed` to force a reload).');
       return;
     }
   }
   console.log('Seeding Neo4j with the Minas Gerais cachaça graph...');
-
   const constraints = [
     'CREATE CONSTRAINT user_email IF NOT EXISTS FOR (u:User) REQUIRE u.email IS UNIQUE',
     'CREATE CONSTRAINT user_username IF NOT EXISTS FOR (u:User) REQUIRE u.username IS UNIQUE',
@@ -135,10 +109,8 @@ async function seed(force: boolean): Promise<void> {
     'CREATE CONSTRAINT review_id IF NOT EXISTS FOR (r:Review) REQUIRE r.id IS UNIQUE',
   ];
   for (const c of constraints) await run(c);
-
   await run('MATCH (n) DETACH DELETE n');
   console.log('Cleared previous data.');
-
   for (const city of CITIES) {
     await run(
       `CREATE (c:City {
@@ -149,7 +121,6 @@ async function seed(force: boolean): Promise<void> {
     );
   }
   console.log(`Created ${CITIES.length} cities.`);
-
   for (const d of DISTILLERIES) {
     await run(
       `MATCH (c:City {name: $city})
@@ -169,17 +140,10 @@ async function seed(force: boolean): Promise<void> {
          updatedAt: toString(datetime())
        })
        CREATE (d)-[:LOCATED_IN]->(c)`,
-      {
-        ...d,
-        id: randomUUID(),
-        status: d.status ?? 'VERIFIED',
-        landmark: d.landmark ?? false,
-      },
+      { ...d, id: randomUUID(), status: d.status ?? 'VERIFIED', landmark: d.landmark ?? false },
     );
   }
   console.log(`Created ${DISTILLERIES.length} distilleries.`);
-
-  // ROAD mesh: each city linked to its 3 nearest, km = geodesic × 1.27
   await run(
     `MATCH (a:City), (b:City)
      WHERE a.name <> b.name
@@ -193,7 +157,6 @@ async function seed(force: boolean): Promise<void> {
   );
   const roads = await run<{ roads: number }>('MATCH ()-[r:ROAD]->() RETURN count(r) AS roads');
   console.log(`Created ${roads[0]?.roads ?? 0} ROAD links between cities.`);
-
   const passwordHash = await bcrypt.hash(seedPassword, 10);
   for (const user of USERS) {
     await run(
@@ -202,16 +165,10 @@ async function seed(force: boolean): Promise<void> {
          passwordHash: $passwordHash, reputation: $reputation,
          createdAt: toString(datetime()), updatedAt: toString(datetime())
        })`,
-      {
-        id: randomUUID(),
-        ...user,
-        passwordHash,
-        reputation: user.username === 'demo' ? 4.2 : 3.1,
-      },
+      { id: randomUUID(), ...user, passwordHash, reputation: user.username === 'demo' ? 4.2 : 3.1 },
     );
   }
   console.log(`Created ${USERS.length} travelers (demo@cachaceiro.app / ${seedPassword}).`);
-
   for (const review of REVIEWS) {
     await run(
       `MATCH (u:User {username: $username}), (d:Distillery {name: $distillery})
@@ -228,7 +185,6 @@ async function seed(force: boolean): Promise<void> {
      SET d.rating = round(avgRating * 10) / 10.0, d.reviewCount = total`,
   );
   console.log(`Created ${REVIEWS.length} field notes (reviews).`);
-
   const summary = await run<{ label: string; total: number }>(
     `MATCH (n)
      UNWIND labels(n) AS label

@@ -2,8 +2,7 @@ import { handle } from '../lib/handle';
 import * as distilleryService from '../services/distilleryService';
 import * as reviewService from '../services/reviewService';
 
-export const list = handle((req) =>
-  distilleryService.list(Number(req.query.page), Number(req.query.pageSize)));
+export const list = handle((req) => distilleryService.list(Number(req.query.page), Number(req.query.pageSize)));
 
 export const getById = handle(async (req) => {
   const distillery = await distilleryService.getById(String(req.params.id));
