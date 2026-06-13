@@ -1,18 +1,33 @@
-import express = require('express');
-import cors = require('cors');
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
+import routes from './routes';
+import { env } from './config/env';
+import { securityHeaders } from './middlewares/securityHeaders';
+import { rateLimit } from './middlewares/rateLimit';
+import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.disable('x-powered-by');
+app.set('trust proxy', true);
+app.use(securityHeaders);
+app.use(cors(env.allowedOrigins.length ? { origin: env.allowedOrigins } : {}));
+app.use(express.json({ limit: '100kb' }));
+app.use('/auth', rateLimit(20, 60_000));
 
-// Rota teste da API
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'online', 
-    timestamp: new Date(),
-    message: 'API do app de adegas rodando perfeitamente.' 
-  });
+app.get('/health', (_req, res) => {
+  res.json({ status: 'online', timestamp: new Date().toISOString(), message: 'API do Cachaceiro Viajante no ar.' });
 });
 
-export = app;
+app.use(routes);
+
+if (env.webDist) {
+  app.use(express.static(env.webDist, { maxAge: '1h', index: 'index.html' }));
+  app.get(/.*/, (_req, res) => res.sendFile(path.join(env.webDist, 'index.html')));
+}
+
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+export default app;

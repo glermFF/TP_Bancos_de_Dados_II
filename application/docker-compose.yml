@@ -1,36 +1,50 @@
-version: '3.8'
-
-services: 
+# Dev: cp .env.example .env (neste diretório) antes de subir.
+services:
   neo4j:
     image: neo4j:5
-    container_name: adegaDB
+    container_name: cachacaDB
     restart: unless-stopped
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
     environment:
-      - NEO4J_AUTH=neo4j/senha123
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:?defina NEO4J_PASSWORD no .env}
     volumes:
-      - ./neo4j/data:/data
-      - ./neo4j/logs:/logs
-      - ./neo4j/import:/var/lib/neo4j/import
-  
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+
   backend:
     build:
       context: ./app-backend
       dockerfile: back.dockerfile
-    container_name: adegaBackend
+    container_name: cachacaAPI
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - PORT=3000
+      - HOST=0.0.0.0
       - NEO4J_URI=bolt://neo4j:7687
       - NEO4J_USER=neo4j
-      - NEO4J_PASSWORD=senha123
-    volumes:
-      - ./app-backend:/app 
-      - /app/node_modules 
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?}
+      - JWT_SECRET=${JWT_SECRET:?defina JWT_SECRET no .env}
+      - SEED_USER_PASSWORD=${SEED_USER_PASSWORD:-}
+    depends_on:
+      - neo4j
+
+  # One-shot: carrega o dataset de Minas Gerais e sai.
+  seed:
+    build:
+      context: ./app-backend
+      dockerfile: back.dockerfile
+    container_name: cachacaSeed
+    command: ["npm", "run", "seed:auto"]
+    restart: "no"
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?}
+      - SEED_USER_PASSWORD=${SEED_USER_PASSWORD:-}
     depends_on:
       - neo4j
 
@@ -38,14 +52,17 @@ services:
     build:
       context: ./app-frontend
       dockerfile: front.dockerfile
-    container_name: adegaFrontend
+    container_name: cachacaWeb
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     environment:
       - EXPO_PACKAGER_PROXY_URL=http://localhost:8081
-    volumes:
-      - ./app-frontend:/app 
-      - /app/node_modules 
+      # URL que o navegador usa para falar com a API (porta publicada)
+      - EXPO_PUBLIC_API_URL=http://localhost:3000
     depends_on:
       - backend
+
+volumes:
+  neo4j_data:
+  neo4j_logs:

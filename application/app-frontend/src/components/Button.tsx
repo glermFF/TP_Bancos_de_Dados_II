@@ -7,9 +7,7 @@ type Props = {
   label: string;
   onPress?: () => void;
   ghost?: boolean;
-  /** ghost button sitting on a dark/ink surface — light border + label */
   onDark?: boolean;
-  /** solid cream button with ink label (used on red/ink cards) */
   invert?: boolean;
   arrow?: '→' | '↓' | null;
   disabled?: boolean;
@@ -53,11 +51,7 @@ export function Button({ label, onPress, ghost, onDark, invert, arrow = '→', d
 }
 
 const styles = StyleSheet.create({
-  btn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 14, paddingHorizontal: 22, borderRadius: 999, borderWidth: 1,
-    alignSelf: 'flex-start',
-  },
+  btn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 22, borderRadius: 999, borderWidth: 1, alignSelf: 'flex-start' },
   full: { alignSelf: 'stretch', width: '100%' },
   filled: { backgroundColor: colors.ink, borderColor: colors.ink },
   filledHover: { backgroundColor: colors.red, borderColor: colors.red },

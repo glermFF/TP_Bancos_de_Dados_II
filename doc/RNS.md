@@ -1,21 +1,44 @@
-### Regras de Negócio
+# Regras de Negócio
 
-- **RN01 - Raio de Busca Limitado:** O sistema só deve recomendar e incluir no cálculo de rotas adegas que estejam num raio máximo de X quilômetros da localização atual do usuário.
+- **RN01 — Raio de busca limitado:** recomendações e montagem de rota devem
+  considerar apenas alambiques dentro de um raio máximo do ponto de referência
+  do viajante. *(Planejada — o planejador hoje expõe o estado inteiro.)*
 
-- **RN02 - Requisito de Avaliação Mínima para Destaque:** Para que uma adega seja recomendada dentre as melhores, ela precisa ter um número mínimo de N avaliações, evitando que locais com apenas um voto nota 5 distorçam o algoritmo.
+- **RN02 — Mínimo de avaliações para destaque:** um alambique precisa de um
+  número mínimo de avaliações antes de encabeçar recomendações, evitando que
+  um único voto 5 estrelas distorça o ranking. A interface mostra a contagem
+  de notas ao lado de cada nota média.
 
-- **RN03 - Dependência de Localização Ativa:** O aplicativo só traçará rotas em tempo real se a permissão de GPS do dispositivo estiver ativa. Caso contrário, o sistema exibirá apenas listagens estáticas baseadas no centro da cidade selecionada.
+- **RN03 — Dependência de localização ativa:** rotas em tempo real a partir da
+  posição do usuário exigem permissão de GPS; sem ela o app funciona a partir
+  do alambique de partida escolhido. *(A demo web sempre parte de uma parada
+  selecionada.)*
 
-- **RN04 - Cadastro de Nova Adega:** Um usuário poderá cadastrar uma nova adega caso pela localização em tempo real do seu GPS ou por *pinpoint*, podendo escolher no mapa o local da nova adega.
+- **RN04 — Cadastro de novo alambique:** um viajante logado pode indicar um
+  novo alambique marcando o ponto no mapa (`POST /distilleries`, exige JWT).
+  Implementada na tela “Indicar alambique”.
 
-- **RN05 - Ciclo de Vida da Validação (Quarentena):** Toda nova adega cadastrada por usuários inicia com o status `EM_VALIDACAO`. Ela só mudará para `VERIFICADA` após receber um número mínimo de confirmações de usuários diferentes ou aprovação manual de um administrador.
+- **RN05 — Ciclo de validação (quarentena):** toda indicação de usuário entra
+  no grafo com status `IN_VALIDATION`. Só após validação vira `VERIFIED`.
+  Implementada em `distilleryModel.suggestDistillery`.
 
-- **RN06 - Filtro de Confiança no Mapa:** O usuário final terá um botão de filtro no mapa para escolher se deseja visualizar apenas adegas `VERIFICADAS` ou se quer incluir também aquelas que estão `EM_VALIDACAO`.
+- **RN06 — Filtro de confiança:** o catálogo tem um filtro visível para
+  incluir ou esconder entradas `IN_VALIDATION`. Implementada na tela de
+  Alambiques.
 
-- **RN07 - Recálculo Dinâmico do Peso das Arestas:** O peso da aresta (relação distância vs. avaliação) entre o Usuário e a Adega deve ser recalculado pela API sempre que o usuário se mover significativamente ou quando a adega receber uma nova avaliação.
+- **RN07 — Recálculo dinâmico dos pesos:** custos de rota nunca são
+  armazenados; a matriz de distâncias é recalculada com `point.distance()` a
+  cada requisição, então novas paradas e mudanças de nota sempre aparecem.
 
-- **RN08 - Prevenção de Nós Isolados:** Uma adega só estará visível e ativa para cálculo de rotas se possuir um relacionamento válido de localização com uma cidade ativa `(:Adega)-[:LOCALIZADA_EM]->(:Cidade)` e seu status não estiver como `BLOQUEADO`.
+- **RN08 — Sem nós órfãos:** um alambique só é listado/roteável enquanto tiver
+  um relacionamento `[:LOCATED_IN]` com uma cidade e seu status não for
+  `BLOCKED` (garantido pelas queries de listagem/matriz).
 
-- **RN09 - Reputação do Usuário (Peso do Voto):** No Neo4j, usuários que costumam avaliar e cadastrar locais corretos ganham um atributo `reputacao: "alta"`. O voto de validação (RN05) de um usuário com reputação alta tem peso maior do que o de um usuário recém-criado.
+- **RN09 — Reputação do usuário:** viajantes carregam um score `reputation`;
+  votos de validação de usuários com reputação alta devem pesar mais.
+  *(Esquema pronto; ponderação planejada.)*
 
-- **RN10 - Personalizar Experiência:** As recomendações funcionaram de acordo com as preferências de tipo de adega o usuário quer visitar. Ex: adega, bar copo sujo, distribuidora.
+- **RN10 — Experiência personalizada:** as recomendações respeitam as
+  categorias preferidas do viajante (branca, envelhecida, premium, orgânica,
+  histórica). O catálogo expõe filtros por categoria; preferências por perfil
+  estão planejadas.

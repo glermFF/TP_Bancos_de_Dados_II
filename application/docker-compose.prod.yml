@@ -1,0 +1,56 @@
+# Produção (Umbrel ou qualquer host Docker):
+#   cp .env.example .env   # preencha NEO4J_PASSWORD, JWT_SECRET, TUNNEL_TOKEN…
+#   docker compose -f docker-compose.prod.yml --profile tunnel up -d --build
+# Sem o profile "tunnel" sobe só banco + app (teste local de produção).
+services:
+  neo4j:
+    image: neo4j:5
+    container_name: cachacaDB
+    restart: unless-stopped
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:?defina NEO4J_PASSWORD no .env}
+      - NEO4J_server_memory_heap_max__size=512m
+      - NEO4J_server_memory_pagecache_size=256m
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    # sem "ports": o banco só é alcançável pela rede interna do compose
+
+  app:
+    build:
+      context: .
+      dockerfile: app.dockerfile
+    container_name: cachacaApp
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?}
+      - JWT_SECRET=${JWT_SECRET:?defina JWT_SECRET no .env}
+      - ALLOWED_ORIGINS=${PUBLIC_ORIGIN:-}
+      - SEED_USER_PASSWORD=${SEED_USER_PASSWORD:-}
+    ports:
+      # padrão 127.0.0.1 (só a própria máquina); para liberar na rede local,
+      # defina APP_BIND com o IP LAN da máquina. Internet: só pelo túnel.
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-8480}:8080"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cachacaTunnel
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    # vazio só dá erro se o profile "tunnel" for ativado sem token no .env
+    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN:-}
+    depends_on:
+      - app
+
+volumes:
+  neo4j_data:

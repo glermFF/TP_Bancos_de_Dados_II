@@ -7,13 +7,9 @@ type Props = Omit<PressableProps, 'style' | 'children'> & {
   children: React.ReactNode | ((hovered: boolean) => React.ReactNode);
 };
 
-/** Pressable that exposes hover state (web) for the editorial hover effects. */
 export function Hoverable({ style, hoverStyle, children, ...rest }: Props) {
   const [hovered, setHovered] = useState(false);
-  const content =
-    typeof children === 'function'
-      ? (children as (h: boolean) => React.ReactNode)(hovered)
-      : children;
+  const content = typeof children === 'function' ? (children as (h: boolean) => React.ReactNode)(hovered) : children;
   return (
     <Pressable
       onHoverIn={() => setHovered(true)}

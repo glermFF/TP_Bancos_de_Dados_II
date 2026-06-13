@@ -13,7 +13,6 @@ export function useShellPad() {
   return layout.padX;
 }
 
-/** Page shell: cream canvas, centered max-width column, topbar + footer. */
 export function Screen({ active, children }: { active: RouteName; children: React.ReactNode }) {
   const padX = useShellPad();
   useEffect(() => { installWebChrome(); }, []);
@@ -31,10 +30,5 @@ export function Screen({ active, children }: { active: RouteName; children: Reac
 const styles = StyleSheet.create({
   canvas: { flex: 1, backgroundColor: colors.cream },
   scroll: { alignItems: 'center' },
-  shell: {
-    width: '100%',
-    maxWidth: layout.maxWidth,
-    paddingTop: 22,
-    paddingBottom: 80,
-  },
+  shell: { width: '100%', maxWidth: layout.maxWidth, paddingTop: 22, paddingBottom: 80 },
 });

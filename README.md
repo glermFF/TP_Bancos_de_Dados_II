@@ -1,97 +1,101 @@
-# O Cachaceiro Viajante
+# Cachaceiro Viajante
 
-Guia de roteiros de cachaça em Minas Gerais. O usuário escolhe os alambiques que
-quer conhecer e o app monta a melhor ordem de visitar todos — a rota que cobre
-todas as paradas rodando o mínimo de estrada, partindo de onde ele quiser.
+*O guia de campo do cachaceiro que viaja por Minas Gerais.*
 
-Projeto da disciplina de **Banco de Dados II** (UFOP). Por baixo do guia, o
-roteiro é calculado sobre um banco de dados em grafo (Neo4j), tratando alambiques
-como pontos e estradas como ligações entre eles.
+Escolha os alambiques que quer visitar; o app calcula a **rota mais rápida**
+que cobre todos — cidades reais, coordenadas reais, estradas reais — e desenha
+o trajeto num mapa ao vivo. Por baixo do capô, cada lugar é um nó e cada
+estrada um relacionamento num grafo **Neo4j**: o roteiro é literalmente uma
+pergunta feita ao banco de dados.
+
+Trabalho prático da disciplina de **Banco de Dados II** (UFOP).
+
+## Funcionalidades
+
+- 🥃 **Catálogo de alambiques reais de MG** — Salinas, Nova União, Betim,
+  Tiradentes e mais; cada um é um nó `(:Distillery)` com coordenadas WGS-84 reais
+- 🗺️ **Planejador de rotas em mapa real** — Leaflet + OpenStreetMap; toque nos
+  pinos, escolha a partida e o algoritmo (vizinho mais próximo ou 2-opt)
+- 🧭 **Cálculo movido a grafo** — o Neo4j computa a matriz de `point.distance()`;
+  a API roda heurísticas de TSP e devolve a ordem de visita; o OSRM ajusta o
+  resultado às rodovias reais
+- 👤 **Contas** — cadastro / login (JWT + bcrypt), sessão persistida
+- ✍️ **Diário de bordo** — viajantes logados registram notas de campo
+  (avaliações) que atualizam a nota de cada alambique dentro do grafo
+- 📍 **Indicar alambique** — logado, você finca o pino no mapa e o lugar entra
+  no grafo em quarentena (EM VALIDAÇÃO) até ser confirmado
+- 📴 **Tolerância a falhas** — sem API, a interface roda com um dataset de
+  exemplo embutido
 
 ## Stack
 
-| Camada    | Tecnologia                                            |
-|-----------|-------------------------------------------------------|
-| Frontend  | Expo / React Native (web via `react-native-web`), TypeScript |
-| Backend   | Node.js + Express, TypeScript                         |
-| Banco     | Neo4j 5                                               |
-| Containers| Docker **ou** Podman (+ compose)                      |
-
-## Estrutura
-
-```
-application/
-  app-frontend/      # app Expo/RN — telas, componentes, tema, dados, lib de rota
-    src/
-      components/    # Topbar, Footer, Button, PageHead, ...
-      screens/       # Mapa, Alambiques, Rotas, Diario, Sobre
-      data/          # mocks + tipos de domínio
-      lib/           # cálculo de rota (+ testes) e formatação
-      services/      # cliente HTTP para o backend
-      theme/         # cores e tipografia
-  app-backend/       # API Express → Neo4j (controllers, services, models, routes)
-  docker-compose.yml # Neo4j + backend + frontend
-doc/                 # documentação (arquitetura, RNs, testes)
-Makefile             # atalhos de dev/test (veja abaixo)
-```
+| Camada    | Tecnologia |
+|-----------|------------|
+| Frontend  | Expo / React Native Web · TypeScript · Leaflet |
+| Backend   | Node.js · Express · TypeScript · JWT |
+| Banco     | Neo4j 5 — grafo de propriedades + pontos espaciais |
+| Infra     | Docker **ou** Podman (+ compose) · Makefile |
 
 ## Como rodar
 
-Tudo passa pelo **Makefile** na raiz. Rode `make` (ou `make help`) para ver a
-lista completa de comandos.
+Pré-requisitos: Node 20+, e Docker ou Podman para o banco.
 
-### Pré-requisitos
-
-- Node.js 20+ e npm
-- Para o banco/stack em container: Docker **ou** Podman
-
-### Primeiro acesso
+### Tudo em containers
 
 ```bash
-make install      # instala dependências do front e do back
-make dev          # abre o frontend em http://localhost:8081 (funciona offline, com dados de exemplo)
+make up
 ```
 
-### Rodando com o banco de dados
+### Dev local (hot reload)
 
 ```bash
-make db           # sobe só o Neo4j em container (http://localhost:7474 · neo4j / senha123)
-make back         # roda o backend local na porta 3000
-make front        # roda o frontend local
-# ou tudo junto em containers:
-make up           # Neo4j + backend + frontend via docker/podman compose
+make install   # dependências do front + back
+cp application/app-backend/.env.example application/app-backend/.env  # preencha as senhas
+make db        # container do Neo4j (usa NEO4J_PASSWORD do .env)
+make seed      # carrega o dataset de Minas Gerais
+make back      # API → http://localhost:3000
+make front     # app web → http://localhost:8081
 ```
 
-### Comandos do Makefile
+Abra **http://localhost:8081** — o seed cria a conta `demo@cachaceiro.app`
+com a senha de `SEED_USER_PASSWORD` (ou uma aleatória impressa no log).
+Neo4j Browser em http://localhost:7474.
 
-| Comando          | O que faz                                                        |
-|------------------|------------------------------------------------------------------|
-| `make help`      | Lista todos os comandos disponíveis                              |
-| `make install`   | Instala dependências (frontend + backend)                       |
-| `make dev`       | Roda o frontend (Expo web) — funciona offline com dados de exemplo |
-| `make up`        | Sobe a stack inteira em containers                              |
-| `make down`      | Para e remove os containers                                     |
-| `make logs`      | Acompanha os logs dos containers                                |
-| `make db`        | Sobe apenas o Neo4j (sem precisar de compose)                   |
-| `make db-stop`   | Para e remove o container do Neo4j                              |
-| `make front`     | Roda o frontend local (Expo web)                                |
-| `make back`      | Roda o backend local (porta 3000)                               |
-| `make seed`      | Carrega os dados iniciais no Neo4j                              |
-| `make test`      | Roda os testes (frontend)                                       |
-| `make typecheck` | Checagem de tipos TypeScript (front + back)                     |
-| `make clean`     | Remove `node_modules` e artefatos de build                      |
+### Produção (Umbrel + Cloudflare Tunnel)
 
-> O Makefile detecta automaticamente o container engine (`docker` ou `podman`)
-> e o comando de compose disponível (`docker compose` v2, `docker-compose` v1 ou
-> os equivalentes do podman), funcionando em distros baseadas em Debian/Ubuntu e
-> em Fedora.
-
-### Apontando o frontend para a API
-
-O frontend usa dados de exemplo por padrão e cai para eles quando a API está
-fora do ar. Para apontar para o backend, defina a variável de ambiente antes de
-rodar o front:
+Imagem única (web estático + API), Neo4j fechado na rede interna, app exposto
+só em `127.0.0.1` e túnel da Cloudflare na frente — guia completo em
+[doc/Deploy.md](doc/Deploy.md).
 
 ```bash
-EXPO_PUBLIC_API_URL=http://localhost:3000 make front
+cd application && cp .env.example .env   # segredos
+make prod-up-tunnel
 ```
+
+Rode `make help` para ver todos os alvos (`typecheck`, `test`, `logs`,
+`clean`, ...).
+
+## Documentação
+
+| Doc | Conteúdo |
+|---|---|
+| [doc/Architecture.md](doc/Architecture.md) | camadas MSC, pipeline de cálculo de rota, estrutura do projeto |
+| [doc/Database.md](doc/Database.md) | modelo do grafo, constraints, queries Cypher principais, dataset |
+| [doc/API.md](doc/API.md) | referência de endpoints com payloads |
+| [doc/RNS.md](doc/RNS.md) | RN01–RN10 e o status de implementação de cada uma |
+| [doc/Testing.md](doc/Testing.md) | como rodar, testar e fazer smoke-test de tudo |
+| [doc/Deploy.md](doc/Deploy.md) | produção: Umbrel, Docker e túnel Cloudflare |
+
+## Telas
+
+- **Mapa (home)** — hero editorial com prancha de rota projetada e estatísticas ao vivo do grafo
+- **Alambiques** — catálogo com busca e filtros (região, categoria, nota, confiança)
+- **Monte sua rota** — a funcionalidade principal: mapa real, seleção por pinos, solver, roteiro
+- **Diário** — notas de campo da comunidade + escreva a sua (logado)
+- **Indicar alambique** — finque o pino no mapa e mande a ficha (logado)
+- **Sobre** — o modelo de grafo e a arquitetura, ilustrados
+- **Entrar / Criar conta** — formulários em estilo carteirinha de viajante
+
+---
+
+*Beba com moderação. 18+.*

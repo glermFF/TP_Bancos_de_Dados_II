@@ -1,39 +1,61 @@
-// Domain types — mirror the Neo4j property-graph model described in Sobre.
-// (:Alambique)-[:ESTRADA {km,min}]->(:Alambique)
-// (:Alambique)-[:FICA_EM]->(:Cidade)
-// (:Viajante)-[:AVALIOU {nota}]->(:Alambique)
+export type DistilleryStatus = 'VERIFIED' | 'IN_VALIDATION' | 'BLOCKED';
 
-export interface GraphNode {
+export interface Distillery {
   id: string;
   name: string;
-  city: string; // região / cidade label used on the map
-  x: number; // svg coord ~ geography of MG
-  y: number;
-}
-
-export interface Alambique {
-  id: string;
-  idx: string;
-  name: string;
-  label: string; // node label, e.g. ":Alambique"
-  props: string[]; // extra property tags
   city: string;
   region: string;
   category: string;
-  rate: number;
-  reviews: number;
+  status: DistilleryStatus;
+  rating: number;
+  reviewCount: number;
+  founded: number | null;
+  signature: string | null;
+  tags: string[];
+  latitude: number;
+  longitude: number;
 }
 
 export interface Review {
   id: string;
-  who: string;
-  from: string;
-  avatar: 'copper' | 'red' | 'ink';
-  stars: number; // 0..5 (halves allowed)
-  place: string;
-  when: string;
+  title: string;
   body: string;
-  bodyLead: string;
-  tags: { label: string; route?: boolean }[];
-  useful: number;
+  rating: number;
+  createdAt: string;
+  author: { id: string; name: string; username: string };
+  distillery: { id: string; name: string; city: string };
 }
+
+export interface User {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  reputation: number;
+  createdAt: string;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export type RouteAlgorithm = 'nearest' | 'two-opt';
+
+export interface RouteLeg { fromId: string; toId: string; km: number; }
+
+export interface RouteSolution {
+  algorithm: RouteAlgorithm;
+  stops: Distillery[];
+  legs: RouteLeg[];
+  totalKm: number;
+  savedKm: number;
+  estimatedMinutes: number;
+}
+
+export interface GraphStats { distilleries: number; cities: number; reviews: number; regions: number; }
+
+export interface LatLng { latitude: number; longitude: number; }

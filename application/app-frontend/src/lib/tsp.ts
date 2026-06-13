@@ -1,73 +1,61 @@
-import type { GraphNode } from '../data/types';
-import { KM_PER_UNIT } from '../data/nodes';
+import type { LatLng } from '../data/types';
+import { roadKm } from './geo';
 
-/**
- * Open-path Travelling Salesman heuristics with a fixed start node.
- * Ported from the rotas template; pure functions so they unit-test cleanly
- * and can later be swapped for Neo4j GDS calls on the backend.
- */
+export interface TspPoint extends LatLng { id: string; }
 
-export function distance(a: GraphNode, b: GraphNode): number {
-  return Math.hypot(a.x - b.x, a.y - b.y) * KM_PER_UNIT;
+export function pathLength(order: TspPoint[]): number {
+  let total = 0;
+  for (let i = 0; i < order.length - 1; i++) total += roadKm(order[i], order[i + 1]);
+  return total;
 }
 
-export function pathLength(order: GraphNode[]): number {
-  let sum = 0;
-  for (let i = 0; i < order.length - 1; i++) sum += distance(order[i], order[i + 1]);
-  return sum;
+export function cycleLength(order: TspPoint[]): number {
+  if (order.length < 2) return 0;
+  return pathLength(order) + roadKm(order[order.length - 1], order[0]);
 }
 
-/** Greedy nearest-neighbour from `start` over `nodes`. */
-export function nearestNeighbor(nodes: GraphNode[], start: GraphNode): GraphNode[] {
-  const pool = nodes.filter((n) => n.id !== start.id);
-  const order: GraphNode[] = [start];
-  let cur = start;
+export function nearestNeighbor<T extends TspPoint>(points: T[], start: T): T[] {
+  const pool = points.filter((p) => p.id !== start.id);
+  const order: T[] = [start];
+  let current: T = start;
   while (pool.length) {
     let bestIdx = 0;
     let best = Infinity;
     for (let i = 0; i < pool.length; i++) {
-      const d = distance(cur, pool[i]);
+      const d = roadKm(current, pool[i]);
       if (d < best) { best = d; bestIdx = i; }
     }
-    cur = pool.splice(bestIdx, 1)[0];
-    order.push(cur);
+    current = pool.splice(bestIdx, 1)[0];
+    order.push(current);
   }
   return order;
 }
 
-/** 2-opt refinement: keeps reversing segments while it shortens the path. */
-export function twoOpt(order: GraphNode[]): GraphNode[] {
+export function twoOpt<T extends TspPoint>(order: T[]): T[] {
   let best = order.slice();
+  let bestLen = cycleLength(best);
   let improved = true;
   while (improved) {
     improved = false;
     for (let i = 1; i < best.length - 1; i++) {
       for (let k = i + 1; k < best.length; k++) {
-        const candidate = best
-          .slice(0, i)
-          .concat(best.slice(i, k + 1).reverse(), best.slice(k + 1));
-        if (pathLength(candidate) < pathLength(best) - 1e-4) {
-          best = candidate;
-          improved = true;
-        }
+        const candidate = best.slice(0, i).concat(best.slice(i, k + 1).reverse(), best.slice(k + 1));
+        const len = cycleLength(candidate);
+        if (len < bestLen - 1e-6) { best = candidate; bestLen = len; improved = true; }
       }
     }
   }
   return best;
 }
 
-export type Algo = 'nn' | '2opt';
+export type Algo = 'nearest' | 'two-opt';
 
-export interface SolveResult {
-  order: GraphNode[];
-  total: number; // km
-  saved: number; // km vs naive selection order
-}
+export interface SolveResult<T extends TspPoint> { order: T[]; totalKm: number; savedKm: number; }
 
-export function solveRoute(nodes: GraphNode[], start: GraphNode, algo: Algo): SolveResult {
-  let order = nearestNeighbor(nodes, start);
-  const naive = pathLength([start, ...nodes.filter((n) => n.id !== start.id)]);
-  if (algo === '2opt') order = twoOpt(order);
-  const total = pathLength(order);
-  return { order, total, saved: Math.max(0, Math.round(naive - total)) };
+export function solveRoute<T extends TspPoint>(points: T[], start: T, algo: Algo): SolveResult<T> {
+  let order = nearestNeighbor(points, start);
+  if (algo === 'two-opt') order = twoOpt(order);
+  const naive = cycleLength([start, ...points.filter((p) => p.id !== start.id)]);
+  const totalKm = cycleLength(order);
+  return { order, totalKm, savedKm: Math.max(0, naive - totalKm) };
 }
