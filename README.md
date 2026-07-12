@@ -61,16 +61,8 @@ Abra **http://localhost:8081** — o seed cria a conta `demo@cachaceiro.app`
 com a senha de `SEED_USER_PASSWORD` (ou uma aleatória impressa no log).
 Neo4j Browser em http://localhost:7474.
 
-### Produção (Umbrel + Cloudflare Tunnel)
-
-Imagem única (web estático + API), Neo4j fechado na rede interna, app exposto
-só em `127.0.0.1` e túnel da Cloudflare na frente — guia completo em
-[doc/Deploy.md](doc/Deploy.md).
-
-```bash
-cd application && cp .env.example .env   # segredos
-make prod-up-tunnel
-```
+> Projeto de uso local: não há deploy em servidor/VPS/Umbrel, só `make up`
+> na sua máquina — detalhes de segurança e operação em [doc/Deploy.md](doc/Deploy.md).
 
 Rode `make help` para ver todos os alvos (`typecheck`, `test`, `logs`,
 `clean`, ...).
@@ -84,7 +76,18 @@ Rode `make help` para ver todos os alvos (`typecheck`, `test`, `logs`,
 | [doc/API.md](doc/API.md) | referência de endpoints com payloads |
 | [doc/RNS.md](doc/RNS.md) | RN01–RN10 e o status de implementação de cada uma |
 | [doc/Testing.md](doc/Testing.md) | como rodar, testar e fazer smoke-test de tudo |
-| [doc/Deploy.md](doc/Deploy.md) | produção: Umbrel, Docker e túnel Cloudflare |
+| [doc/Deploy.md](doc/Deploy.md) | deploy local com Docker/Podman, segurança e operação |
+| [doc/diagrams/](doc/diagrams/) | diagramas UML (arquitetura, modelo de dados, sequência, casos de uso) |
+
+## Diagramas
+
+Modelagem UML da arquitetura e do domínio de dados — fontes `.mmd` em
+[doc/diagrams/](doc/diagrams/), renderizados com
+[beautiful-mermaid](https://github.com/lukilabs/beautiful-mermaid) e embutidos
+em [doc/Architecture.md](doc/Architecture.md), [doc/Database.md](doc/Database.md)
+e [doc/RNS.md](doc/RNS.md).
+
+![Diagrama de arquitetura em camadas](doc/diagrams/architecture.svg)
 
 ## Telas
 

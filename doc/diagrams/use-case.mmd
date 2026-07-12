@@ -1,0 +1,21 @@
+flowchart LR
+    V((Viajante))
+
+    subgraph SYS["Cachaceiro Viajante"]
+        UC1(["Cadastrar-se / Entrar"])
+        UC2(["Consultar catalogo de alambiques"])
+        UC3(["Planejar rota otimizada"])
+        UC4(["Registrar avaliacao (diario de bordo)"])
+        UC5(["Indicar novo alambique"])
+        UC6(["Consultar estatisticas do grafo"])
+    end
+
+    V --> UC1
+    V --> UC2
+    V --> UC3
+    V --> UC4
+    V --> UC5
+    V --> UC6
+
+    UC4 -. requer .-> UC1
+    UC5 -. requer .-> UC1

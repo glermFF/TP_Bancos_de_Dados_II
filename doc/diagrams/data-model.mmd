@@ -1,0 +1,47 @@
+classDiagram
+    class User {
+        +UUID id
+        +String name
+        +String username
+        +String email
+        +String passwordHash
+        +Float reputation
+        +String createdAt
+        +String updatedAt
+    }
+
+    class Distillery {
+        +UUID id
+        +String name
+        +String category
+        +String status
+        +Float rating
+        +Integer reviewCount
+        +Integer founded
+        +String signature
+        +String[] tags
+        +Boolean landmark
+        +Point location
+        +String createdAt
+        +String updatedAt
+    }
+
+    class City {
+        +String name
+        +String region
+        +Point location
+    }
+
+    class Review {
+        +UUID id
+        +String title
+        +String body
+        +Float rating
+        +String createdAt
+    }
+
+    User "1" --> "0..*" Review : WROTE
+    Review "0..*" --> "1" Distillery : ABOUT
+    Distillery "0..*" --> "1" City : LOCATED_IN
+    User "0..*" --> "0..*" Distillery : SUGGESTED
+    City "0..*" --> "0..*" City : ROAD (km)

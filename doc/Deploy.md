@@ -1,86 +1,59 @@
-# Deploy em Produção (Umbrel + Cloudflare Tunnel)
+# Deploy Local
 
-A produção roda como **dois containers** numa rede interna do Docker, mais um
-túnel opcional:
+Este projeto roda inteiramente na máquina do desenvolvedor, via Docker (ou
+Podman) Compose. Não há deploy em VPS, Umbrel ou qualquer host remoto — só
+local.
 
 ```
-internet ──HTTPS──> Cloudflare ──túnel──> [cloudflared] ──http://app:8080──> [app]
-                                                                              │ bolt (rede interna)
-                                                                          [neo4j]
+localhost ──> [frontend :8081] ──http://localhost:3000──> [backend :3000] ──bolt (rede interna)──> [neo4j :7474/:7687]
 ```
 
-- **app** — imagem única (`application/app.dockerfile`): o site exportado pelo
-  Expo é servido como estático pela própria API Express. No host, a porta só é
-  publicada em `127.0.0.1` — ninguém da LAN/internet acessa direto.
-- **neo4j** — sem nenhuma porta publicada; só existe na rede interna do compose.
-- **cloudflared** — conecta-se *para fora* (outbound) até a Cloudflare; nenhuma
-  porta de entrada é aberta na máquina.
+Todas as portas dos containers são publicadas em `127.0.0.1`: só a própria
+máquina acessa, nada fica exposto na rede local ou na internet.
+
+## Subindo a stack
+
+```bash
+cd application && cp .env.example .env
+nano .env        # preencha NEO4J_PASSWORD e JWT_SECRET (ex.: openssl rand -hex 32)
+```
+
+```bash
+make up          # ou: docker compose -f application/docker-compose.yml up --build
+```
+
+Isso sobe 4 containers na rede interna do compose:
+
+| Container | Papel | Porta publicada |
+|---|---|---|
+| `cachacaDB` (neo4j) | banco de grafos | `127.0.0.1:7474` (browser), `127.0.0.1:7687` (bolt) |
+| `cachacaAPI` (backend) | API Express | `127.0.0.1:3000` |
+| `cachacaSeed` | carrega o dataset de MG e sai (one-shot) | — |
+| `cachacaWeb` (frontend) | Expo web | `127.0.0.1:8081` |
 
 ## Segurança aplicada
 
 | Item | Como |
 |---|---|
-| Segredos | só via variáveis de ambiente (`application/.env`, gitignorado); a API **recusa subir** em produção sem `NEO4J_PASSWORD` e `JWT_SECRET` |
-| Exposição | app publicado apenas em `127.0.0.1:${APP_PORT}`; Neo4j sem portas |
-| CORS | travado em `PUBLIC_ORIGIN` (o domínio do túnel) |
-| Headers | HSTS, CSP, nosniff, frame-ancestors none, Referrer/Permissions-Policy |
-| Força bruta | rate limit de 20 req/min por IP em `/auth` |
+| Segredos | só via `application/.env` (gitignorado); a API não sobe sem `NEO4J_PASSWORD` e `JWT_SECRET` |
 | Senhas | bcrypt no banco; usuários do seed recebem senha de `SEED_USER_PASSWORD` ou uma aleatória impressa uma única vez no log |
-
-## Passo a passo no Umbrel
-
-O umbrelOS já vem com Docker. Via SSH (`ssh umbrel@umbrel.local`):
-
-```bash
-git clone <repo> && cd TP_Bancos_de_Dados_II/application
-cp .env.example .env
-nano .env        # preencha NEO4J_PASSWORD, JWT_SECRET (ex.: openssl rand -hex 32),
-                 # PUBLIC_ORIGIN e TUNNEL_TOKEN (passo abaixo)
-```
-
-> A porta padrão do app é `8080` (só em localhost). Se conflitar com algum app
-> do Umbrel, mude `APP_PORT` no `.env`.
-
-Suba o stack:
-
-```bash
-docker compose -f docker-compose.prod.yml --profile tunnel up -d --build
-docker compose -f docker-compose.prod.yml logs -f app   # acompanhe seed + boot
-```
-
-(ou, da raiz do repositório: `make prod-up-tunnel`.)
-
-## Criando o túnel na Cloudflare
-
-1. Painel **Zero Trust** → *Networks* → *Tunnels* → **Create a tunnel**
-   (tipo *Cloudflared*). Copie o **token** para `TUNNEL_TOKEN` no `.env`.
-2. Em *Public Hostname*, aponte o seu domínio (ex.:
-   `cachaceiro.seu-dominio.com`) para o serviço **`http://app:8080`** —
-   o cloudflared roda na mesma rede do compose e resolve `app` pelo nome.
-3. `PUBLIC_ORIGIN=https://cachaceiro.seu-dominio.com` no `.env` (trava o CORS).
-4. Pronto: TLS, DNS e exposição ficam por conta da Cloudflare; a máquina não
-   abre porta nenhuma para a internet.
-
-## Teste local da produção (sem túnel)
-
-```bash
-cd application && cp .env.example .env  # preencha as senhas
-docker compose -f docker-compose.prod.yml up -d --build
-curl http://127.0.0.1:8080/health
-xdg-open http://127.0.0.1:8080          # o site inteiro, servido pela API
-```
+| Força bruta | rate limit de 20 req/min por IP em `/auth` |
+| Headers | X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy em toda resposta |
 
 ## Operação
 
 ```bash
-make prod-logs                      # logs
-make prod-down                      # parar tudo
-docker compose -f docker-compose.prod.yml up -d --build   # atualizar versão
+make logs                                   # acompanhar os containers
+make down                                   # parar e remover os containers
+docker compose -f application/docker-compose.yml up --build   # atualizar após mudar código
 ```
 
-- O seed roda no boot do app em modo *pula-se-já-tem-dados*: os cadastros de
-  usuários sobrevivem a reinícios e atualizações.
+- O seed roda no boot do backend em modo *pula-se-já-tem-dados*: reiniciar os
+  containers não apaga usuários nem avaliações.
 - Backup: o grafo vive no volume `neo4j_data`
   (`docker run --rm -v application_neo4j_data:/data -v $PWD:/bkp alpine tar czf /bkp/neo4j-backup.tgz /data`).
-- Para recarregar o dataset do zero: derrube o stack, remova o volume
-  (`docker volume rm application_neo4j_data`) e suba de novo.
+- Para recarregar o dataset do zero: `make down`, remova o volume
+  (`docker volume rm application_neo4j_data`) e suba de novo com `make up`.
+
+Para desenvolvimento com hot reload (sem containerizar front/back), veja
+[doc/Testing.md](Testing.md).

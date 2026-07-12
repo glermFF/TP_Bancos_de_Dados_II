@@ -22,6 +22,8 @@ Peças transversais: `middlewares/` (autenticação JWT, tratador central de
 erros), `config/` (env + driver do Neo4j), `lib/` (heurísticas puras de TSP),
 `scripts/seed.ts` (carrega o dataset de Minas Gerais).
 
+![Diagrama de arquitetura em camadas](diagrams/architecture.svg)
+
 ### Por que esse formato
 
 * **Testabilidade** — regras de negócio concentradas nos services; o solver de
@@ -42,6 +44,8 @@ erros), `config/` (env + driver do Neo4j), `lib/` (heurísticas puras de TSP),
 4. O cliente web então pede ao OSRM (roteamento OpenStreetMap) a geometria
    viária real daquela ordem e desenha no mapa Leaflet; se o OSRM estiver fora
    do ar, cai para linhas retas tracejadas.
+
+![Diagrama de sequência do cálculo de rota](diagrams/route-solve-sequence.svg)
 
 ## Stack
 

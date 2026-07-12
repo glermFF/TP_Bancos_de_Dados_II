@@ -1,5 +1,7 @@
 # Regras de Negócio
 
+![Diagrama de casos de uso](diagrams/use-case.svg)
+
 - **RN01 — Raio de busca limitado:** recomendações e montagem de rota devem
   considerar apenas alambiques dentro de um raio máximo do ponto de referência
   do viajante. *(Planejada — o planejador hoje expõe o estado inteiro.)*
