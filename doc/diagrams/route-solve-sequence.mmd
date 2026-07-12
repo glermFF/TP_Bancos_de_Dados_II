@@ -1,0 +1,22 @@
+sequenceDiagram
+    actor V as Viajante
+    participant Web as Frontend (RoutePlanner)
+    participant API as Backend (routeController)
+    participant Svc as routeService
+    participant Neo as Neo4j
+    participant OSRM
+
+    V->>Web: seleciona paradas, partida e algoritmo
+    Web->>API: POST /routes/solve {stopIds, startId, algorithm}
+    API->>Svc: solveRoute(input)
+    Svc->>Neo: MATCH (Distillery) WHERE id IN stopIds
+    Neo-->>Svc: paradas encontradas
+    Svc->>Neo: point.distance() par a par entre paradas
+    Neo-->>Svc: matriz de distancias (metros)
+    Svc->>Svc: aplica fator rodoviario (1.27x)
+    Svc->>Svc: nearestNeighbor() + twoOpt() sobre a matriz
+    Svc-->>API: RouteSolution {stops, legs, totalKm, savedKm, estimatedMinutes}
+    API-->>Web: 200 OK (JSON)
+    Web->>OSRM: geometria viaria da ordem calculada
+    OSRM-->>Web: rota real (GeoJSON)
+    Web-->>V: desenha o trajeto no mapa Leaflet

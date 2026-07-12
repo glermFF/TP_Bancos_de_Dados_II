@@ -23,6 +23,7 @@
   founded: Integer?,
   signature: String?,    // rótulo de referência
   tags: [String],
+  landmark: Boolean,     // parada emblemática da tradição local
   location: point({latitude, longitude}),  // coordenadas WGS-84 reais
   createdAt: String, updatedAt: String
 })
@@ -41,6 +42,8 @@
   createdAt: String
 })
 ```
+
+![Diagrama de classes do modelo de dados](diagrams/data-model.svg)
 
 ## Relacionamentos
 
@@ -126,12 +129,14 @@ CREATE (d)-[:LOCATED_IN]->(c)
 
 ## Dataset do seed
 
-12 cidades reais de Minas Gerais (Salinas, Januária, Diamantina, Nova União,
-Betim, Ouro Preto, Tiradentes, Prados, Coronel Xavier Chaves, São Tiago,
-Perdões, São Roque de Minas) e 15 alambiques com coordenadas reais em nível de
-cidade — incluindo produtores renomados como Havana/Anísio Santiago, Seleta,
-Boazinha e Canarinha (Salinas), Germana (Nova União), Vale Verde (Betim) e
-Espírito de Minas (São Tiago). Entradas marcadas com `landmark: true` são
-paradas representativas batizadas pela tradição alambiqueira da cidade. Três
-viajantes demo e oito avaliações completam o grafo (login
+20 cidades reais de Minas Gerais, cobrindo Norte de Minas, São Francisco,
+Espinhaço, Central, Metropolitana, Inconfidentes, Vertentes, Sul de Minas,
+Canastra, Lago de Furnas, Zona da Mata e Triângulo — e 24 alambiques com
+coordenadas reais em nível de cidade, incluindo produtores renomados como
+Havana/Anísio Santiago, Seleta, Boazinha e Canarinha (Salinas), Germana (Nova
+União), Vale Verde (Betim) e Espírito de Minas (São Tiago). Entradas marcadas
+com `landmark: true` são paradas representativas batizadas pela tradição
+alambiqueira da cidade; uma delas (Engenho Ponte do Rosário, Tiradentes) nasce
+com status `IN_VALIDATION` para exercitar a quarentena (RN05) já no seed.
+Três viajantes demo e oito avaliações completam o grafo (login
 `demo@cachaceiro.app`, senha definida por `SEED_USER_PASSWORD` no seed).

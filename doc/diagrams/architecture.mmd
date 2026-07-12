@@ -1,0 +1,19 @@
+flowchart TB
+    subgraph FE["Frontend: Expo / React Native Web (TypeScript)"]
+        UI["Screens e componentes<br/>(Home, Distilleries, RoutePlanner, Journal, SuggestPlace...)"]
+    end
+
+    subgraph BE["Backend: Node.js / Express (MSC)"]
+        RT["Routes<br/>/auth /distilleries /reviews /routes /stats"]
+        CT["Controllers<br/>HTTP em, JSON fora"]
+        SV["Services<br/>regras de negocio, TSP (nearest / 2-opt)"]
+        MD["Models<br/>Cypher"]
+        RT --> CT --> SV --> MD
+    end
+
+    DB[("Neo4j 5<br/>grafo de propriedades e pontos espaciais")]
+    OSRM[["OSRM<br/>roteamento OpenStreetMap"]]
+
+    UI -- "HTTP/JSON (axios)" --> RT
+    MD -- "Bolt / Cypher" --> DB
+    UI -- "geometria viaria real" --> OSRM

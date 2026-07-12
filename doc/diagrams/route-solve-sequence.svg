@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1004.886 740" width="1004.886" height="740" style="--bg:#FFFFFF;--fg:#27272A;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter%2C%20%22Segoe%20UI%22%2C%20sans-serif:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter, "Segoe UI", sans-serif', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="seq-arrow" markerWidth="8" markerHeight="5" refX="8" refY="2.5" orient="auto-start-reverse">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" />
+  </marker>
+  <marker id="seq-arrow-open" markerWidth="8" markerHeight="5" refX="8" refY="2.5" orient="auto-start-reverse">
+    <polyline points="0 0, 8 2.5, 0 5" fill="none" stroke="var(--_arrow)" stroke-width="1" />
+  </marker>
+</defs>
+<line class="lifeline" data-actor="V" x1="70.687" y1="70" x2="70.687" y2="710" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="Web" x1="241.33749999999998" y1="70" x2="241.33749999999998" y2="710" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="API" x1="464.9694999999999" y1="70" x2="464.9694999999999" y2="710" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="Svc" x1="654.886" y1="70" x2="654.886" y2="710" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="Neo" x1="794.886" y1="70" x2="794.886" y2="710" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<line class="lifeline" data-actor="OSRM" x1="934.886" y1="70" x2="934.886" y2="710" stroke="var(--_line)" stroke-width="0.75" stroke-dasharray="6 4" />
+<g class="message" data-from="V" data-to="Web" data-label="seleciona paradas, partida e algoritmo" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="70.687" y1="90" x2="241.33749999999998" y2="90" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="156.01225" y="80" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">seleciona paradas, partida e algoritmo</text>
+</g>
+<g class="message" data-from="Web" data-to="API" data-label="POST /routes/solve {stopIds, startId, algorithm}" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="241.33749999999998" y1="130" x2="464.9694999999999" y2="130" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="353.15349999999995" y="120" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">POST /routes/solve {stopIds, startId, algorithm}</text>
+</g>
+<g class="message" data-from="API" data-to="Svc" data-label="solveRoute(input)" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="464.9694999999999" y1="170" x2="654.886" y2="170" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="559.92775" y="160" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">solveRoute(input)</text>
+</g>
+<g class="message" data-from="Svc" data-to="Neo" data-label="MATCH (Distillery) WHERE id IN stopIds" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="654.886" y1="210" x2="794.886" y2="210" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="724.886" y="200" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">MATCH (Distillery) WHERE id IN stopIds</text>
+</g>
+<g class="message" data-from="Neo" data-to="Svc" data-label="paradas encontradas" data-line-style="dashed" data-arrow-head="filled" data-self="false">
+  <line x1="794.886" y1="250" x2="654.886" y2="250" stroke="var(--_line)" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#seq-arrow)" />
+  <text x="724.886" y="240" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">paradas encontradas</text>
+</g>
+<g class="message" data-from="Svc" data-to="Neo" data-label="point.distance() par a par entre paradas" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="654.886" y1="290" x2="794.886" y2="290" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="724.886" y="280" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">point.distance() par a par entre paradas</text>
+</g>
+<g class="message" data-from="Neo" data-to="Svc" data-label="matriz de distancias (metros)" data-line-style="dashed" data-arrow-head="filled" data-self="false">
+  <line x1="794.886" y1="330" x2="654.886" y2="330" stroke="var(--_line)" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#seq-arrow)" />
+  <text x="724.886" y="320" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">matriz de distancias (metros)</text>
+</g>
+<g class="message" data-from="Svc" data-to="Svc" data-label="aplica fator rodoviario (1.27x)" data-line-style="solid" data-arrow-head="filled" data-self="true">
+  <polyline points="654.886,370 684.886,370 684.886,390 654.886,390" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="692.886" y="380" font-size="11" text-anchor="start" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">aplica fator rodoviario (1.27x)</text>
+</g>
+<g class="message" data-from="Svc" data-to="Svc" data-label="nearestNeighbor() + twoOpt() sobre a matriz" data-line-style="solid" data-arrow-head="filled" data-self="true">
+  <polyline points="654.886,440 684.886,440 684.886,460 654.886,460" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="692.886" y="450" font-size="11" text-anchor="start" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">nearestNeighbor() + twoOpt() sobre a matriz</text>
+</g>
+<g class="message" data-from="Svc" data-to="API" data-label="RouteSolution {stops, legs, totalKm, savedKm, estimatedMinutes}" data-line-style="dashed" data-arrow-head="filled" data-self="false">
+  <line x1="654.886" y1="510" x2="464.9694999999999" y2="510" stroke="var(--_line)" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#seq-arrow)" />
+  <text x="559.92775" y="500" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">RouteSolution {stops, legs, totalKm, savedKm, estimatedMinutes}</text>
+</g>
+<g class="message" data-from="API" data-to="Web" data-label="200 OK (JSON)" data-line-style="dashed" data-arrow-head="filled" data-self="false">
+  <line x1="464.9694999999999" y1="550" x2="241.33749999999998" y2="550" stroke="var(--_line)" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#seq-arrow)" />
+  <text x="353.15349999999995" y="540" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">200 OK (JSON)</text>
+</g>
+<g class="message" data-from="Web" data-to="OSRM" data-label="geometria viaria da ordem calculada" data-line-style="solid" data-arrow-head="filled" data-self="false">
+  <line x1="241.33749999999998" y1="590" x2="934.886" y2="590" stroke="var(--_line)" stroke-width="1" marker-end="url(#seq-arrow)" />
+  <text x="588.11175" y="580" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">geometria viaria da ordem calculada</text>
+</g>
+<g class="message" data-from="OSRM" data-to="Web" data-label="rota real (GeoJSON)" data-line-style="dashed" data-arrow-head="filled" data-self="false">
+  <line x1="934.886" y1="630" x2="241.33749999999998" y2="630" stroke="var(--_line)" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#seq-arrow)" />
+  <text x="588.11175" y="620" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">rota real (GeoJSON)</text>
+</g>
+<g class="message" data-from="Web" data-to="V" data-label="desenha o trajeto no mapa Leaflet" data-line-style="dashed" data-arrow-head="filled" data-self="false">
+  <line x1="241.33749999999998" y1="670" x2="70.687" y2="670" stroke="var(--_line)" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#seq-arrow)" />
+  <text x="156.01225" y="660" font-size="11" text-anchor="middle" font-weight="400" fill="var(--_text-muted)" dy="3.8499999999999996">desenha o trajeto no mapa Leaflet</text>
+</g>
+<g class="actor" data-id="V" data-label="Viajante" data-type="actor">
+  <g transform="translate(52.687,32) scale(1.5)">
+    <path d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" fill="none" stroke="var(--_line)" stroke-width="0.6666666666666666" />
+    <path d="M15 10C15 11.6569 13.6569 13 12 13C10.3431 13 9 11.6569 9 10C9 8.34315 10.3431 7 12 7C13.6569 7 15 8.34315 15 10Z" fill="none" stroke="var(--_line)" stroke-width="0.6666666666666666" />
+    <path d="M5.62842 18.3563C7.08963 17.0398 9.39997 16 12 16C14.6 16 16.9104 17.0398 18.3716 18.3563" fill="none" stroke="var(--_line)" stroke-width="0.6666666666666666" />
+  </g>
+  <text x="70.687" y="84" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">Viajante</text>
+</g>
+<g class="actor" data-id="Web" data-label="Frontend (RoutePlanner)" data-type="participant">
+  <rect x="151.374" y="30" width="179.92699999999996" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="241.33749999999998" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">Frontend (RoutePlanner)</text>
+</g>
+<g class="actor" data-id="API" data-label="Backend (routeController)" data-type="participant">
+  <rect x="371.30099999999993" y="30" width="187.33699999999996" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="464.9694999999999" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">Backend (routeController)</text>
+</g>
+<g class="actor" data-id="Svc" data-label="routeService" data-type="participant">
+  <rect x="598.6379999999999" y="30" width="112.49599999999998" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="654.886" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">routeService</text>
+</g>
+<g class="actor" data-id="Neo" data-label="Neo4j" data-type="participant">
+  <rect x="754.886" y="30" width="80" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="794.886" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">Neo4j</text>
+</g>
+<g class="actor" data-id="OSRM" data-label="OSRM" data-type="participant">
+  <rect x="894.886" y="30" width="80" height="40" rx="4" ry="4" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="934.886" y="50" font-size="13" text-anchor="middle" font-weight="500" fill="var(--_text)" dy="4.55">OSRM</text>
+</g>
+</svg>
