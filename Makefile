@@ -1,7 +1,6 @@
 FRONT := application/app-frontend
 BACK  := application/app-backend
 COMPOSE_FILE := application/docker-compose.yml
-COMPOSE_PROD_FILE := application/docker-compose.prod.yml
 
 # segredos vêm do .env do backend (gitignorado)
 -include $(BACK)/.env
@@ -15,12 +14,10 @@ COMPOSE_BIN := $(shell \
 	elif command -v podman-compose >/dev/null 2>&1; then echo "podman-compose"; \
 	else echo "docker compose"; fi)
 COMPOSE := $(COMPOSE_BIN) -f $(COMPOSE_FILE)
-COMPOSE_PROD := $(COMPOSE_BIN) -f $(COMPOSE_PROD_FILE)
 
 .DEFAULT_GOAL := help
 .PHONY: help install install-front install-back \
         dev up down logs db db-stop back front web seed \
-        prod-up prod-up-tunnel prod-down prod-logs \
         test test-front typecheck clean
 
 # NOTE: parser avoids non-greedy regex so it works with both gawk (Fedora)
@@ -73,19 +70,6 @@ back: ## Run the backend locally (ts-node, port 3000)
 
 seed: ## (Re)load the Minas Gerais dataset into Neo4j
 	cd $(BACK) && npm run seed
-
-## ---- produção ----
-prod-up: ## Production stack (Neo4j interno + app em 127.0.0.1:$$APP_PORT)
-	$(COMPOSE_PROD) up -d --build
-
-prod-up-tunnel: ## Production stack + túnel Cloudflare (exige TUNNEL_TOKEN no application/.env)
-	$(COMPOSE_PROD) --profile tunnel up -d --build
-
-prod-down: ## Stop the production stack
-	$(COMPOSE_PROD) --profile tunnel down
-
-prod-logs: ## Tail production logs
-	$(COMPOSE_PROD) logs -f
 
 ## ---- quality ----
 test: test-front ## Run the test suites
