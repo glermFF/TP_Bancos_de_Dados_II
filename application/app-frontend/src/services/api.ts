@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Distillery, GraphStats, Paginated, Review, RouteAlgorithm, RouteSolution, User } from '../data/types';
+import type { CommunityResult, Distillery, GraphStats, Paginated, Review, RouteAlgorithm, RouteSolution, User } from '../data/types';
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 
@@ -69,6 +69,11 @@ export async function suggestDistillery(input: { name: string; category: string;
 
 export async function solveRoute(stopIds: string[], startId: string, algorithm: RouteAlgorithm): Promise<RouteSolution> {
   const { data } = await api.post<RouteSolution>('/routes/solve', { stopIds, startId, algorithm });
+  return data;
+}
+
+export async function fetchCommunities(): Promise<CommunityResult> {
+  const { data } = await api.get<CommunityResult>('/communities', { timeout: 30000 });
   return data;
 }
 

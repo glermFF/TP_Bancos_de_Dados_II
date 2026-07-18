@@ -37,7 +37,27 @@ export default function RoutePlannerScreen() {
   const [solving, setSolving] = useState(false);
   const [roadGeo, setRoadGeo] = useState<RoadGeometry | null>(null);
   const [roadPending, setRoadPending] = useState(false);
+  const [circuits, setCircuits] = useState<Record<string, number> | null>(null);
+  const [showCircuits, setShowCircuits] = useState(false);
+  const [circuitsBusy, setCircuitsBusy] = useState(false);
+  const [circuitsError, setCircuitsError] = useState(false);
   const solveSeq = useRef(0);
+
+  async function toggleCircuits() {
+    if (showCircuits) return setShowCircuits(false);
+    setCircuitsError(false);
+    setShowCircuits(true);
+    if (circuits || circuitsBusy) return;
+    setCircuitsBusy(true);
+    try {
+      setCircuits((await apiService.fetchCommunities()).communities);
+    } catch {
+      setCircuitsError(true);
+      setShowCircuits(false);
+    } finally {
+      setCircuitsBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (!live) return;
@@ -81,8 +101,9 @@ export default function RoutePlannerScreen() {
         selected: selected.has(d.id),
         isStart: d.id === startId,
         order: orderIndex.get(d.id) ?? null,
+        community: showCircuits && circuits ? circuits[d.id] ?? null : null,
       })),
-    [distilleries, selected, startId, orderIndex],
+    [distilleries, selected, startId, orderIndex, showCircuits, circuits],
   );
 
   const straightPath = useMemo(() => {
@@ -174,6 +195,18 @@ export default function RoutePlannerScreen() {
         >
           <RouteMap stops={mapStops} routeLatLngs={roadGeo?.latlngs ?? null} straightPath={roadGeo ? null : straightPath} onTogglePin={toggleStop} />
         </MapBoard>
+        <View style={styles.circuitsRow}>
+          <Chip
+            label={circuitsBusy ? copy.routePlanner.circuitsLoading : showCircuits ? copy.routePlanner.circuitsHide : copy.routePlanner.circuitsShow}
+            on={showCircuits}
+            onPress={toggleCircuits}
+          />
+          {circuitsError ? (
+            <Text style={styles.circuitsNote}>{copy.routePlanner.circuitsError}</Text>
+          ) : showCircuits && circuits ? (
+            <Text style={styles.circuitsNote}>{copy.routePlanner.circuitsNote(new Set(Object.values(circuits)).size)}</Text>
+          ) : null}
+        </View>
       </View>
       <View style={[styles.lower, stacked && styles.col]}>
         <View style={[{ width: '100%' }, !stacked && styles.controlsCol]}>
@@ -284,6 +317,8 @@ const styles = StyleSheet.create({
   mv: { fontFamily: fonts.display, fontStyle: 'italic', fontSize: 30, color: colors.ink },
   mk: { fontFamily: fonts.mono, fontSize: 9, letterSpacing: 1.4, color: colors.inkSoft, marginTop: 6 },
   mapWrap: { marginBottom: 36 },
+  circuitsRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginTop: 12 },
+  circuitsNote: { flex: 1, minWidth: 240, fontFamily: fonts.mono, fontSize: 9.5, letterSpacing: 1, lineHeight: 14, color: colors.inkSoft },
   lower: { flexDirection: 'row', columnGap: 40, rowGap: 28, alignItems: 'flex-start' },
   controlsCol: { flex: 1 },
   itinCol: { flex: 1.15 },

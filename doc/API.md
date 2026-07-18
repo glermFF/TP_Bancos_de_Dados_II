@@ -72,3 +72,23 @@ matriz de `point.distance()` do Neo4j corrigida pelo fator rodoviário 1,27;
 `savedKm` compara com visitar as paradas na ordem em que foram enviadas.
 Limites: 2–20 paradas. Erros: `400` (entrada inválida), `404` (parada
 desconhecida).
+
+## Circuitos (detecção de comunidades)
+
+`GET /communities`
+
+Resposta:
+
+```json
+{
+  "algorithm": "HP-MOCD",
+  "communities": { "<id do alambique>": 0, "...": 1 },
+  "groups": [ { "id": 0, "distilleryIds": ["...", "..."] } ]
+}
+```
+
+O backend monta um grafo de proximidade (cada alambique ligado aos seus 3
+vizinhos mais próximos via `point.distance()` do Neo4j) e envia as arestas ao
+sidecar Python (`app-community`), que roda o HP-MOCD (biblioteca `pymocd`).
+O resultado fica em cache por 5 minutos. Erros: `422` (menos de 3 alambiques),
+`503` (sidecar fora do ar).

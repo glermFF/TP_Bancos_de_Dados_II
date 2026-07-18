@@ -1,0 +1,8 @@
+Cachaceiro Viajante — TP de Banco de Dados II
+=============================================
+
+Vídeo de demonstração da aplicação:
+LINK_DO_VIDEO   <-- substituir pelo link do YouTube antes de enviar
+
+Repositório com o código-fonte e instruções de execução:
+https://github.com/glermFF/TP_Bancos_de_Dados_II

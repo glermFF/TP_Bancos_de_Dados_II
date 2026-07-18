@@ -1,0 +1,5 @@
+% stub local: comando \doi + \doitext (apague se instalar texlive-doi)
+\ProvidesPackage{doi}
+\newcommand*{\doitext}{doi:}
+\newcommand*{\doi}[1]{\href{https://doi.org/#1}{\doitext#1}}
+\endinput

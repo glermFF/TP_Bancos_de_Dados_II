@@ -7,6 +7,7 @@ export interface MapStop {
   selected: boolean;
   isStart: boolean;
   order: number | null;
+  community?: number | null;
 }
 
 export interface RouteMapProps {

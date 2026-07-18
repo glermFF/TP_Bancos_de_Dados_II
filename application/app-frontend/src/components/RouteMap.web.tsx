@@ -24,6 +24,7 @@ function pinClass(stop: MapStop, hasSolution: boolean): string {
   else if (stop.order != null) parts.push("cv-pin--ordered");
   else if (stop.selected) parts.push("cv-pin--selected");
   if (hasSolution && !stop.selected) parts.push("cv-pin--muted");
+  if (stop.community != null) parts.push(`cv-pin--comm-${stop.community % 8}`);
   return parts.join(" ");
 }
 

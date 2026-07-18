@@ -49,6 +49,12 @@ export interface RouteLeg {
   km: number;
 }
 
+export interface CommunityResult {
+  algorithm: 'HP-MOCD';
+  communities: Record<string, number>;
+  groups: { id: number; distilleryIds: string[] }[];
+}
+
 export interface RouteSolution {
   algorithm: RouteAlgorithm;
   stops: Distillery[];

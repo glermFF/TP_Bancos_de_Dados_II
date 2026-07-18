@@ -26,5 +26,6 @@ export const env = {
   jwtSecret: required('JWT_SECRET'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
   allowedOrigins: (process.env.ALLOWED_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+  communityUrl: process.env.COMMUNITY_URL ?? 'http://localhost:5000',
   webDist: process.env.WEB_DIST ?? '',
 } as const;

@@ -214,6 +214,11 @@ export const copy = {
     itinNote: 'As distâncias por trecho são estimativas do grafo (geodésica × fator rodoviário 1,27).',
     itinNoteOsrm: ' Os totais acima seguem as estradas reais via OSRM.',
     emptyText: 'Escolha pelo menos dois alambiques — no mapa ou na lista — e trace a rota para ver a ordem de visita.',
+    circuitsShow: 'Ver circuitos (HP-MOCD)',
+    circuitsHide: 'Ocultar circuitos',
+    circuitsLoading: 'Detectando circuitos…',
+    circuitsNote: (n: number) => `${n} circuitos detectados por comunidades no grafo de proximidade (HP-MOCD). Alambiques com anel da mesma cor formam um circuito natural de visita.`,
+    circuitsError: 'Não foi possível detectar os circuitos agora. O serviço de comunidades está no ar?',
   },
 
   gate: {

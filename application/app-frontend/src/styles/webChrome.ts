@@ -97,6 +97,16 @@ export function installWebChrome(): void {
       font-family: "Bodoni Moda", serif; font-style: italic; font-size: 13px;
     }
     .cv-pin--muted { opacity: .55; }
+
+    /* circuitos (comunidades HP-MOCD): a cor do anel identifica o grupo */
+    .cv-pin--comm-0 { border-color: #8f2d56; box-shadow: 0 0 0 3px #8f2d5644, 0 2px 6px rgba(20,20,20,.32); }
+    .cv-pin--comm-1 { border-color: #1d6f8b; box-shadow: 0 0 0 3px #1d6f8b44, 0 2px 6px rgba(20,20,20,.32); }
+    .cv-pin--comm-2 { border-color: #b07d2b; box-shadow: 0 0 0 3px #b07d2b44, 0 2px 6px rgba(20,20,20,.32); }
+    .cv-pin--comm-3 { border-color: #3f7d3a; box-shadow: 0 0 0 3px #3f7d3a44, 0 2px 6px rgba(20,20,20,.32); }
+    .cv-pin--comm-4 { border-color: #6a4fb3; box-shadow: 0 0 0 3px #6a4fb344, 0 2px 6px rgba(20,20,20,.32); }
+    .cv-pin--comm-5 { border-color: #c25e33; box-shadow: 0 0 0 3px #c25e3344, 0 2px 6px rgba(20,20,20,.32); }
+    .cv-pin--comm-6 { border-color: #2b7a78; box-shadow: 0 0 0 3px #2b7a7844, 0 2px 6px rgba(20,20,20,.32); }
+    .cv-pin--comm-7 { border-color: #7d3a3a; box-shadow: 0 0 0 3px #7d3a3a44, 0 2px 6px rgba(20,20,20,.32); }
     .cv-pin--draft {
       background: ${colors.copper}; border-color: ${colors.copperDeep}; color: ${colors.cream};
       font-size: 14px;

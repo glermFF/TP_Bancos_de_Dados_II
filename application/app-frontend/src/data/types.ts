@@ -58,4 +58,10 @@ export interface RouteSolution {
 
 export interface GraphStats { distilleries: number; cities: number; reviews: number; regions: number; }
 
+export interface CommunityResult {
+  algorithm: 'HP-MOCD';
+  communities: Record<string, number>;
+  groups: { id: number; distilleryIds: string[] }[];
+}
+
 export interface LatLng { latitude: number; longitude: number; }

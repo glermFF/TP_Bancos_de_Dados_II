@@ -4,16 +4,18 @@ flowchart TB
     end
 
     subgraph BE["Backend: Node.js / Express (MSC)"]
-        RT["Routes<br/>/auth /distilleries /reviews /routes /stats"]
+        RT["Routes<br/>/auth /distilleries /reviews /routes /stats /communities"]
         CT["Controllers<br/>HTTP em, JSON fora"]
-        SV["Services<br/>regras de negocio, TSP (nearest / 2-opt)"]
+        SV["Services<br/>regras de negocio, TSP (nearest / 2-opt), circuitos (kNN + cache 5min)"]
         MD["Models<br/>Cypher"]
         RT --> CT --> SV --> MD
     end
 
     DB[("Neo4j 5<br/>grafo de propriedades e pontos espaciais")]
     OSRM[["OSRM<br/>roteamento OpenStreetMap"]]
+    COMM[["app-community: Python / Flask<br/>HP-MOCD (pymocd)"]]
 
     UI -- "HTTP/JSON (axios)" --> RT
     MD -- "Bolt / Cypher" --> DB
+    SV -- "arestas do grafo de proximidade" --> COMM
     UI -- "geometria viaria real" --> OSRM

@@ -18,3 +18,14 @@
 .DS_Store
 *.swp
 *.log
+# LaTeX build artifacts
+doc/laTeX/*.aux
+doc/laTeX/*.bbl
+doc/laTeX/*.blg
+doc/laTeX/*.out
+doc/laTeX/*.toc
+doc/laTeX/main.pdf
+doc/laTeX/template.zip
+
+# Pacote de entrega
+entrega_TP_BD2.zip
